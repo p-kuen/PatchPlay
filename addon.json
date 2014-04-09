@@ -1,0 +1,12 @@
+{
+	"title"		:	"PatchPlay (PPlay)",
+	"type"		:	"tool",
+	"tags"		:	[ "fun" ],
+	"ignore"	:
+	[
+		"*.git*",
+		"*.bat",
+		"*.jpg",
+		"*.md"
+	]
+}
