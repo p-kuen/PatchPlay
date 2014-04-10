@@ -1,4 +1,3 @@
-
 ----------------
 --  CHECKBOX  --
 ----------------
@@ -23,6 +22,8 @@ function cl_PPlay.addchk( plist, text, typ, var, var2 )
 
 end
 
+
+
 -------------
 --  LABEL  --
 -------------
@@ -43,6 +44,8 @@ function cl_PPlay.addlbl( plist, text, typ )
 	end
 	
 end
+
+
 
 ----------------
 --   BUTTON   --
@@ -71,6 +74,8 @@ function cl_PPlay.addbtn( plist, text, cmd, args )
 	plist:AddItem( btn )
 
 end
+
+
 
 ---------------
 --  TEXTBOX  --

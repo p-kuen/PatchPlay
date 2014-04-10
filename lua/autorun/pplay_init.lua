@@ -12,11 +12,10 @@ cl_PPlay = {}
 -------------------------
 
 AddCSLuaFile()
---AddCSLuaFile("patchplay/client/hud.lua")
 AddCSLuaFile("patchplay/client/player.lua")
 AddCSLuaFile("patchplay/client/panel_functions.lua")
 AddCSLuaFile("patchplay/client/panel.lua")
---AddCSLuaFile("patchplay/client/buddy.lua")
+
 
 
 --------------------------------
@@ -24,17 +23,18 @@ AddCSLuaFile("patchplay/client/panel.lua")
 --------------------------------
 
 if SERVER then
+
+	-- NETWORK STRINGS
 	util.AddNetworkString( "pplay_sendstream" )
 	util.AddNetworkString( "pplay_sendtoserver" )
 
+	-- INCLUDE FILES
 	include( "patchplay/server/sender.lua" )
 
 else
 
-	--include( "patchprotect/client/hud.lua" )
 	include( "patchplay/client/player.lua" )
 	include( "patchplay/client/panel_functions.lua" )
 	include( "patchplay/client/panel.lua" )
-	--include( "patchprotect/client/buddy.lua" )
 	
 end
