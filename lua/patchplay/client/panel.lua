@@ -1,6 +1,6 @@
--------------------
+------------------
 --  ADMIN MENU  --
---------------------
+------------------
 
 function cl_PPlay.AMenu( Panel )
 
@@ -171,7 +171,7 @@ function cl_PPlay.openPanel( ply, cmd, args )
 	slv:AddLine( "HouseTimeFM", "http://mp3.stream.tb-group.fm/ht.mp3?" )
 	slv:AddLine( "TechnoBaseFM", "http://mp3.stream.tb-group.fm/tb.mp3?" )
 	slv:AddLine( "HardBaseFM", "http://mp3.stream.tb-group.fm/hb.mp3?" )
-	slv:AddLine( "CoreBaseFM", "http://mp3.stream.tb-group.fm/cb.mp3?" )
+	slv:AddLine( "CoreBaseFM", "http://mp3.stream.tb-group.fm/ct.mp3?" )
 
 	function slv:OnClickLine( line, selected )
 		print( "selected: " .. line:GetValue(2) )
