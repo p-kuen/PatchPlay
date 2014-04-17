@@ -24,12 +24,11 @@ AddCSLuaFile("patchplay/client/panel.lua")
 
 if SERVER then
 
-	-- NETWORK STRINGS
-	util.AddNetworkString( "pplay_sendstream" )
-	util.AddNetworkString( "pplay_sendtoserver" )
-
 	-- INCLUDE FILES
 	include( "patchplay/server/sender.lua" )
+	include( "patchplay/server/config.lua" )
+	include( "patchplay/server/settings.lua" )
+	
 
 else
 

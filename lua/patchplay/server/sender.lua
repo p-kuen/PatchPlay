@@ -18,8 +18,7 @@ end
 
 -- NETWORKING
 net.Receive( "pplay_sendtoserver", function( len, pl )
-
-	print("got from client")
+	
 	sv_PPlay.sendStream( net.ReadTable() )
 
 end )
