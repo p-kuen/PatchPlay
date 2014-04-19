@@ -1,140 +1,9 @@
-------------------
---  ADMIN MENU  --
-------------------
-
-function cl_PPlay.AMenu( Panel )
-
-	-- DELETE CONTROLS
-	Panel:ClearControls()
-
-	-- CHECK ADMIN
-	if !LocalPlayer():IsSuperAdmin() then
-		cl_PPlay.addlbl( Panel, "You are not an admin!", "panel" )
-		return
-	end
-
-	-- UPDATE PANELS
-	if not cl_PPlay.ACPanel then
-		cl_PPlay.ACPanel = Panel
-	end
-
-	-- PANEL ELEMENTS
-	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Stream-List", "openStreamList" )
-	cl_PPlay.addbtn( Panel, "Open Custom URL", "openCustom" )
-
-end
-
-------------------
---  USER MENU  --
-------------------
-
-function cl_PPlay.UMenu( Panel )
-
-	-- DELETE CONTROLS
-	Panel:ClearControls()
-
-	-- UPDATE PANELS
-	if not cl_PPlay.UCPanel then
-		cl_PPlay.UCPanel = Panel
-	end
-
-	-- PANEL ELEMENTS
-
-	-- Main Switch
-	Panel:AddControl( "Label", { Text = "Main Switch:" } )
-	local chk = vgui.Create( "DCheckBoxLabel" )
-	chk:SetText( "Activate PatchPlay" )
-	chk:SetValue( 1 )
-	chk:SetDark( true )
-	Panel:AddItem( chk )
-
-	function chk:OnChange()
-
-		if !chk:GetChecked() and cl_PPlay.station != nil and cl_PPlay.station:IsValid() then
-			cl_PPlay.station:Pause()
-		else
-			cl_PPlay.station:Play()
-		end
-		
-	end
-
-	-- Volume Slider
-	Panel:AddControl( "Label", { Text = "\nSet Volume:" } )
-	local sldr = vgui.Create( "Slider" )
-	sldr:SetMin( 0 )
-	sldr:SetMax( 100 )
-	sldr:SetValue( 100 )
-	sldr:SetDecimals( 0 )
-
-	sldr.OnValueChanged = function( panel, value )
-		if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:SetVolume( value / 100 ) end
-	end
-
-	Panel:AddItem( sldr )
-
-end
-
-
-
---------------------
---  CREATE MENUS  --
---------------------
-
-local function CreateMenus()
-
-	-- ADMIN MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Admin", "Admin Settings", "", "", cl_PPlay.AMenu)
-	
-	-- USER MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_User", "Settings", "", "", cl_PPlay.UMenu)
-
-end
-hook.Add( "PopulateToolMenu", "PPlayMakeMenus", CreateMenus )
-
-
-
---------------------
---  UPDATE MENUS  --
---------------------
-
-function cl_PPlay.UpdateMenus()
-
-	-- ADMIN MENU
-	if cl_PPlay.ACPanel then
-		cl_PPlay.AMenu(cl_PPlay.ACPanel)
-	end
-	
-	-- USER MENU
-	if cl_PPlay.UCPanel then
-		cl_PPlay.UMenu(cl_PPlay.UCPanel)
-	end
-
-end
-hook.Add( "SpawnMenuOpen", "PProtectMenus", cl_PPlay.UpdateMenus )
-
-
-
-------------------
---  NETWORKING  --
-------------------
-
-function cl_PPlay.sendToServer( url, cmd, streamname )
-	
-	local streamInfo = {
-		stream = url,
-		command = cmd,
-		name = streamname
-	}
-
-	net.Start( "pplay_sendtoserver" )
-		net.WriteTable( streamInfo )
-	net.SendToServer()
-	
-
-end
-
 function cl_PPlay.openStreamList( ply, cmd, args )
+
+	local selectedStream = {
+		name = "",
+		url = ""
+	}
 
 	-- FRAME
 	local frm = vgui.Create( "DFrame" )
@@ -162,8 +31,6 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 
 	-- STREAM LIST
 	cl_PPlay.slv = vgui.Create( "DListView", frm )
-	local SelectedStreamName = ""
-	local SelectedStream = ""
 	cl_PPlay.slv:SetPos( 15, 50 )
 	cl_PPlay.slv:SetSize( w - 30, h - 100 )
 	cl_PPlay.slv:SetMultiSelect( false )
@@ -177,8 +44,8 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 	end)
 
 	function cl_PPlay.slv:OnClickLine( line, selected )
-		SelectedStreamName = line:GetValue(1)
-		SelectedStream = line:GetValue(2)
+		selectedStream["name"] = line:GetValue(1)
+		selectedStream["url"] = line:GetValue(2)
 		cl_PPlay.slv:ClearSelection()
 		line:SetSelected( true )
 	end
@@ -222,9 +89,9 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 	-- DELETE BUTTON FUNCTION
 	function dbtn:OnMousePressed()
 
-		if SelectedStream != "" then
+		if selectedStream["url"] != "" then
 			net.Start( "pplay_deletestream" )
-				net.WriteString( SelectedStream )
+				net.WriteString( selectedStream["url"] )
 			net.SendToServer()
 		end
 		
@@ -233,8 +100,8 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
 
-		if SelectedStream != "" then
-			cl_PPlay.sendToServer( SelectedStream, "play", SelectedStreamName )
+		if selectedStream["url"] != "" then
+			cl_PPlay.sendToServer( selectedStream["url"], "play", selectedStream["name"] )
 		else
 			cl_PPlay.sendToServer( "", "play", "" )
 		end

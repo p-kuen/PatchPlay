@@ -2,7 +2,7 @@
 --  CHECKBOX  --
 ----------------
 
-function cl_PPlay.addchk( plist, text, typ, var, var2 )
+function cl_PPlay.addchk( plist, text )
 
 	local chk = vgui.Create( "DCheckBoxLabel" )
 
