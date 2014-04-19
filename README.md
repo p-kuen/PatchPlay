@@ -7,14 +7,14 @@ PatchPlay is a fast, simple and stable music player for Garry's Mod 13!
 <h3>Everybody wants music:</h3>
 Since we have Garry's Mod we always dreamed of listening to music inside Garry's Mod synchronised with other players. With PatchPlay this is possible now!
 
-<h3>Server side navigation</h3>
-The Super-Admins of the server decide what people hear. At the moment the clients can only hear the streams from the server or nothing. We are working hard on a private player for every client, so they can hear any streams they want!
+<h3>Server and client side navigation</h3>
+The Super-Admins of the server can decide what everybody should hear. At the moment only radio-streams are possible. If the client does not want to listen to this music, he can just use the private mode with his OWN streams. He can easily switch to server-mode at any time!
 
 <h3>Simple but functional</h3>
 Also we are pleased to keep the code as simple as possible, to prevent confusions or other similar things.
 On the other hand we keep adding new functions to give you more freedom to control and more abilties to set things up like you whish to.
 
-<h3>2 Admin Frames for perfect control</h3>
+<h3>2 Frames for perfect control</h3>
 The Frames are called<b>Stream-List, Custom URL</b>.
 
 In the Custom URL Frame you can write any stream URL in, and the player tries to play it. You can also give the stream a name and save it for faster usage. Then, in the Stream-List frame you can choose from your saved streams and you can play them with one click!
@@ -37,6 +37,7 @@ You can control the Settings in the <b>Q-Menu > Utilities</b> (mostly the second
 
 - Same music for EVERYBODY!
 - Server decides which music (see upcoming features)
+- Possibility to stream own music (private-music) - nobody will hear them, except you
 - Modern Notification design
 - Simple to understand
 - Possibility to add and delete streams from your stream-list
@@ -46,7 +47,6 @@ You can control the Settings in the <b>Q-Menu > Utilities</b> (mostly the second
 <h2>Upcoming Features</h2>
 
 - Vote system
-- Private Players for every client
 - Maybe 3D radios
 
 If there are some open questions, please let us know!

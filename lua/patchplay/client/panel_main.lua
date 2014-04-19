@@ -65,8 +65,10 @@ function cl_PPlay.UMenu( Panel )
 		elseif cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.serverStream["playing"] then
 			cl_PPlay.use = true
 			cl_PPlay.play( cl_PPlay.serverStream["stream"], cl_PPlay.serverStream["name"], "server" )
-			
+		elseif cl_PPlay.currentStream["stream_type"] == "private" then
+			cl_PPlay.use = true
 		end
+		cl_PPlay.UpdateMenus()
 		
 	end
 
@@ -83,6 +85,7 @@ function cl_PPlay.UMenu( Panel )
 
 	cl_PPlay.addbtn( Panel, "Open Private Stream-List", "openPrivateStreamList" )
 	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openPrivateCustom" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openPrivateSoundCloud" )
 
 	-- Volume Slider
 	Panel:AddControl( "Label", { Text = "\nSet Volume:" } )
@@ -106,7 +109,7 @@ function cl_PPlay.UMenu( Panel )
 			Panel:AddControl( "Label", {Text = "The server currently streams this Stream-URL: " .. cl_PPlay.serverStream["stream"]})
 		end
 
-		if cl_PPlay.currentStream["stream_type"] == "private" then
+		if cl_PPlay.currentStream["stream_type"] == "private" and cl_PPlay.use then
 			cl_PPlay.addbtn( Panel, "Switch to Server-Stream", "switchToServer" )
 		end
 

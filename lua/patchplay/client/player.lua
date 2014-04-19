@@ -60,7 +60,15 @@ function cl_PPlay.getNameFromURL( url )
 		end
 	end)
 
-	if found == "" then return url else return found end
+	if found == "" then
+		table.foreach( cl_PPlay.privateStreamList, function(key, value)
+			if value["stream"] == url then
+				found = value["name"]
+			end
+		end)
+	end
+
+	if found == "" then	return url else return found end
 
 end
 

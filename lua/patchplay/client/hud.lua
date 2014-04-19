@@ -56,8 +56,8 @@ local function drawNotify(key, value)
 	surface.SetFont( "NotificationFont_big" )
 
 	local notify_text
-	if string.len(value.text) > 18 then
-		notify_text = string.sub(value.text, 0, 18) .. "..."
+	if string.len(value.text) > 35 then
+		notify_text = string.sub(value.text, 0, 35) .. "..."
 	else
 		notify_text = value.text
 	end
@@ -129,7 +129,7 @@ local function drawNowPlaying( streamType )
 
 	else
 
-		streamName = string.sub(cl_PPlay.currentStream["stream"], 0, 35) .. "..."
+		streamName = string.sub(cl_PPlay.currentStream["stream"], 0, 18) .. "..."
 
 	end
 

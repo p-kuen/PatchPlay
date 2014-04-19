@@ -106,6 +106,7 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 			cl_PPlay.sendToServer( "", "play", "" )
 		end
 		frm:Close()
+		cl_PPlay.UpdateMenus()
 	end
 
 	-- STOP BUTTON FUNCTION
@@ -202,6 +203,7 @@ function cl_PPlay.openCustom( ply, cmd, args )
 			net.SendToServer()
 
 			frm:Close()
+			cl_PPlay.UpdateMenus()
 
 		end
 		
