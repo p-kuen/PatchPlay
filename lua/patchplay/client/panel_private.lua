@@ -238,6 +238,7 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 	-- LABEL IN FRAME
 	local clbl = vgui.Create( "DLabel", frm )
 	clbl:SetPos( 15, 30 )
+	clbl:SetSize( w - 30, 20 )
 	clbl:SetText( "SoundCloud URL:" )
 	clbl:SetDark( true )
 
@@ -293,6 +294,10 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 			frm:Close()
 			cl_PPlay.UpdateMenus()
 
+		elseif url == "" then
+			print("Not saved! URL is empty!")
+		elseif te_name:GetValue() == "" then
+			print("Not saved! Name is empty!")
 		end
 		
 	end
@@ -316,7 +321,7 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 				--print(body)
 				trackid = string.match(body, '%d+', string.find(body, "id"))
 				url = "https://api.soundcloud.com/tracks/".. trackid .. "/stream?client_id=92373aa73cab62ccf53121163bb1246e"
-				if te_name:GetValue() != "" then
+				if te_name != nil and te_name:GetValue() != "" then
 					cl_PPlay.play( url, te_name:GetValue(), "private" )
 				else
 					cl_PPlay.play( url, "", "private" )

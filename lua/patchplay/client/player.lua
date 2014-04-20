@@ -1,12 +1,12 @@
 -- CLIENT VARIABLES
 
 cl_PPlay.use = true
+cl_PPlay.showNowPlaying = true
 
 cl_PPlay.currentStream = {
 	stream = "",
 	name = "",
 	stream_type = "",
-	playing = false
 }
 
 cl_PPlay.serverStream = {
@@ -38,7 +38,6 @@ function cl_PPlay.play( url, name, mode, switch )
 			cl_PPlay.currentStream["stream"] = url
 			cl_PPlay.currentStream["name"] = name
 			cl_PPlay.currentStream["stream_type"] = mode
-			cl_PPlay.currentStream["playing"] = true
 			cl_PPlay.showNotify( notify_text, "play", 10)
 
 			cl_PPlay.station = station
@@ -76,7 +75,6 @@ end
 function cl_PPlay.stop( url )
 
 	cl_PPlay.station:Stop()
-	cl_PPlay.currentStream["playing"] = false
 	cl_PPlay.showNotify( cl_PPlay.getNameFromURL( url ), "stop", 10)
 	
 end
@@ -88,7 +86,6 @@ net.Receive( "pplay_sendstream", function( len, pl )
 
 	if info[ "command" ] == "stop" then
 		cl_PPlay.stop( info[ "stream" ] )
-		cl_PPlay.serverStream["playing"] = false
 	else
 		cl_PPlay.play( info[ "stream" ], info[ "name" ], "server" )
 		cl_PPlay.serverStream["stream"] = info["stream"]

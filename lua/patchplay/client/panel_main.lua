@@ -74,7 +74,7 @@ function cl_PPlay.UMenu( Panel )
 
 	Panel:AddItem( chk )
 
-	if cl_PPlay.currentStream["playing"] then
+	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 1 then
 		Panel:AddControl( "Label", {Text = "You are listening in " .. cl_PPlay.currentStream["stream_type"] .. "-mode"})
 	end
 
@@ -101,6 +101,24 @@ function cl_PPlay.UMenu( Panel )
 
 	Panel:AddItem( sldr )
 
+	local chk_nowplay = vgui.Create( "DCheckBoxLabel" )
+	chk_nowplay:SetText( "Show NowPlaying" )
+	chk_nowplay:SetChecked( cl_PPlay.showNowPlaying )
+	chk_nowplay:SetDark( true )
+	
+
+	function chk_nowplay:OnChange()
+
+		if !chk_nowplay:GetChecked() then
+			cl_PPlay.showNowPlaying = false
+		else
+			cl_PPlay.showNowPlaying = true
+		end
+		
+	end
+
+	Panel:AddItem( chk_nowplay )
+
 	if cl_PPlay.currentStream["stream_type"] == "private" or !cl_PPlay.use then
 
 		if cl_PPlay.serverStream["playing"] and cl_PPlay.serverStream["name"] != "" then
@@ -109,7 +127,7 @@ function cl_PPlay.UMenu( Panel )
 			Panel:AddControl( "Label", {Text = "The server currently streams this Stream-URL: " .. cl_PPlay.serverStream["stream"]})
 		end
 
-		if cl_PPlay.currentStream["stream_type"] == "private" and cl_PPlay.use then
+		if cl_PPlay.serverStream["playing"] and cl_PPlay.currentStream["stream_type"] == "private" and cl_PPlay.use then
 			cl_PPlay.addbtn( Panel, "Switch to Server-Stream", "switchToServer" )
 		end
 
