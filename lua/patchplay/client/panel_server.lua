@@ -87,7 +87,7 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 				net.WriteString( selectedStream["url"] )
 			net.SendToServer()
 
-			fillStreamList()
+			timer.Simple(0.1, fillStreamList)
 		end
 		
 	end
@@ -318,7 +318,6 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 
 		http.Fetch( "https://api.sndcdn.com/resolve?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
 			function( body, len, headers, code )
-				print("play " .. cl_PPlay.getSoundCloudURL( body ))
 				playSC(cl_PPlay.getSoundCloudURL( body ))
 			end,
 			function( error )

@@ -23,18 +23,6 @@ function sv_PPlay.loadStreamSettings( )
 	
 end
 
-function sv_PPlay.saveNewStream( name, url )
-
-	sql.Query( "INSERT INTO pplay_streamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "')" )
-
-end
-
-function sv_PPlay.deleteStream( where )
-	print("deleting!")
-	sql.Query( "DELETE FROM pplay_streamlist WHERE stream = '" .. where .. "'" )
-
-end
-
 function sv_PPlay.sendStreamList( ply )
 
 	net.Start("pplay_sendstreamlist")
@@ -44,6 +32,17 @@ function sv_PPlay.sendStreamList( ply )
     else
     	net.Broadcast()
     end
+end
+
+function sv_PPlay.saveNewStream( name, url )
+
+	sql.Query( "INSERT INTO pplay_streamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "')" )
+
+end
+
+function sv_PPlay.deleteStream( where )
+	sql.Query( "DELETE FROM pplay_streamlist WHERE stream = '" .. where .. "'" )
+	sv_PPlay.sendStreamList()
 
 end
 
