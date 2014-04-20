@@ -5,22 +5,10 @@ function cl_PPlay.openPrivateStreamList( ply, cmd, args )
 		url = ""
 	}
 
-	-- FRAME
-	local frm = vgui.Create( "DFrame" )
 	local w, h = 400, 320
-	frm:SetPos( surface.ScreenWidth() / 2 - ( w / 2 ), surface.ScreenHeight() / 2 - ( h / 2 ) )
-	frm:SetSize( w, h )
-	frm:SetTitle( "PatchPlay - Private Stream Player" )
-	frm:SetVisible( true )
-	frm:SetDraggable( true )
-	frm:ShowCloseButton( true )
-	frm:SetBackgroundBlur( true )
-	frm:MakePopup()
 
-	function frm:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
-		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 255 ) )
-	end
+	-- FRAME
+	local frm = cl_PPlay.addfrm(w, h, "PatchPlay - Private Stream Player", true)
 
 	-- LIST VIEW LABEL
 	local llbl = vgui.Create( "DLabel", frm )
@@ -65,25 +53,13 @@ function cl_PPlay.openPrivateStreamList( ply, cmd, args )
 	-- PLAY BUTTON IN FRAME
 	local pbtn = vgui.Create( "DButton", frm )
 	pbtn:Center()
-	pbtn:SetPos( w - 225, h - 40 )
+	pbtn:SetPos( w - 115, h - 40 )
 	pbtn:SetSize( 100, 25 )
 	pbtn:SetText( "Start Stream" )
 	pbtn:SetDark( false )
 
 	function pbtn:Paint()
 		draw.RoundedBox( 0, 0, 0, pbtn:GetWide(), pbtn:GetTall(), Color( 200, 200, 200, 255 ) )
-	end
-
-	-- STOP BUTTON IN FRAME
-	local sbtn = vgui.Create( "DButton", frm )
-	sbtn:Center()
-	sbtn:SetPos( w - 115, h - 40 )
-	sbtn:SetSize( 100, 25 )
-	sbtn:SetText( "Stop Stream" )
-	sbtn:SetDark( true )
-
-	function sbtn:Paint()
-		draw.RoundedBox( 0, 0, 0, sbtn:GetWide(), sbtn:GetTall(), Color( 200, 200, 200, 255 ) )
 	end
 
 	-- DELETE BUTTON FUNCTION
@@ -104,13 +80,6 @@ function cl_PPlay.openPrivateStreamList( ply, cmd, args )
 		end
 		frm:Close()
 		cl_PPlay.UpdateMenus()
-	end
-
-	-- STOP BUTTON FUNCTION
-	function sbtn:OnMousePressed()
-
-		cl_PPlay.stop( cl_PPlay.currentStream["stream"] )
-
 	end
 
 end
@@ -286,15 +255,17 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 	-- SAVE BUTTON FUNCTION
 	function sabtn:OnMousePressed()
 
-		if te_name:GetValue() != "" and url != "" then
+		local streamURL = getSoundCloudURL( te_url:GetValue() )
 
-			cl_PPlay.saveNewStream( te_name:GetValue(), url )
+		if te_name:GetValue() != "" and streamURL != "" then
+
+			cl_PPlay.saveNewStream( te_name:GetValue(), streamURL )
 			cl_PPlay.getStreamList()
 
 			frm:Close()
 			cl_PPlay.UpdateMenus()
 
-		elseif url == "" then
+		elseif streamURL == "" then
 			print("Not saved! URL is empty!")
 		elseif te_name:GetValue() == "" then
 			print("Not saved! Name is empty!")
@@ -305,40 +276,21 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
 
-		local SCURL = te_url:GetValue()
-
-		if SCURL == "" then return end
-
-		local trackid_uri = "https://api.sndcdn.com/resolve?url="..SCURL.."&client_id=92373aa73cab62ccf53121163bb1246e"
-		local id_start = 0
-		local id_end = 0
-		local trackid = ""
-		
-
-		http.Fetch( trackid_uri,
-			function( body, len, headers, code )
-				-- The first argument is the HTML we asked for.
-				--print(body)
-				trackid = string.match(body, '%d+', string.find(body, "id"))
-				url = "https://api.soundcloud.com/tracks/".. trackid .. "/stream?client_id=92373aa73cab62ccf53121163bb1246e"
+		local function playSC( url )
+			if url != "" then
 				if te_name != nil and te_name:GetValue() != "" then
 					cl_PPlay.play( url, te_name:GetValue(), "private" )
 				else
 					cl_PPlay.play( url, "", "private" )
 				end
-			end,
-			function( error )
-				print("fetching not possible") 
 			end
-		 );
+		end
+
+		local streamURL = getSoundCloudURL( te_url:GetValue() )
+		if streamURL != "" then 
+			timer.Simple( 1, playSC, streamURL )
+		end
+
 	end
 end
 concommand.Add( "pplay_openPrivateSoundCloud", cl_PPlay.openPrivateSoundCloud )
-
-
-
-function cl_PPlay.switchToServer()
-	cl_PPlay.play( cl_PPlay.serverStream["stream"], cl_PPlay.serverStream["name"], "server", true )
-	cl_PPlay.UpdateMenus()
-end
-concommand.Add( "pplay_switchToServer", cl_PPlay.switchToServer )

@@ -13,6 +13,7 @@ cl_PPlay.serverStream = {
 	stream = "",
 	name = "",
 	stream_type = "",
+	length = 0,
 	playing = false
 }
 
@@ -38,11 +39,18 @@ function cl_PPlay.play( url, name, mode, switch )
 			cl_PPlay.currentStream["stream"] = url
 			cl_PPlay.currentStream["name"] = name
 			cl_PPlay.currentStream["stream_type"] = mode
+
+			if mode == "server" then
+				cl_PPlay.serverStream["playing"] = true
+				cl_PPlay.serverStream["length"] = station:GetLength()
+			end
+			
 			cl_PPlay.showNotify( notify_text, "play", 10)
 
 			cl_PPlay.station = station
 		else
 			cl_PPlay.showNotify( "INVALID URL!", "error", 10)
+			cl_PPlay.serverStream["playing"] = false
 		end
 		
 	end )
@@ -72,12 +80,59 @@ function cl_PPlay.getNameFromURL( url )
 end
 
 -- STOP FUNCTOIN
-function cl_PPlay.stop( url )
+function cl_PPlay.stop()
 
 	cl_PPlay.station:Stop()
-	cl_PPlay.showNotify( cl_PPlay.getNameFromURL( url ), "stop", 10)
+	cl_PPlay.showNotify( cl_PPlay.currentStream["name"], "stop", 10)
 	
 end
+
+
+
+function cl_PPlay.getSoundCloudURL( body )
+
+	local trackid = string.match(body, '%d+', string.find(body, "id"))
+	local url = "https://api.soundcloud.com/tracks/".. trackid .. "/stream?client_id=92373aa73cab62ccf53121163bb1246e"
+	return url
+
+end
+
+-----------------------
+-- PRIVATE FUNCTIONS --
+-----------------------
+
+concommand.Add( "pplay_stopStreaming", cl_PPlay.stop )
+
+function cl_PPlay.switchToServer()
+	cl_PPlay.play( cl_PPlay.serverStream["stream"], cl_PPlay.serverStream["name"], "server", true )
+	cl_PPlay.UpdateMenus()
+end
+concommand.Add( "pplay_switchToServer", cl_PPlay.switchToServer )
+
+----------------------
+-- SERVER FUNCTIONS --
+----------------------
+
+function cl_PPlay.sendToServer( url, streamname, cmd )
+	
+	local streamInfo = {
+		stream = url,
+		command = cmd,
+		name = streamname
+	}
+
+	net.Start( "pplay_sendtoserver" )
+		net.WriteTable( streamInfo )
+	net.SendToServer()
+end
+
+local function stopServerStreaming( ply, cmd, args )
+
+	cl_PPlay.sendToServer( cl_PPlay.serverStream["stream"], cl_PPlay.serverStream["name"], "stop" )
+	cl_PPlay.serverStream["playing"] = false
+
+end
+concommand.Add( "pplay_stopServerStreaming", stopServerStreaming )
 
 -- NETWORKING
 net.Receive( "pplay_sendstream", function( len, pl )
@@ -85,12 +140,11 @@ net.Receive( "pplay_sendstream", function( len, pl )
 	local info = net.ReadTable()
 
 	if info[ "command" ] == "stop" then
-		cl_PPlay.stop( info[ "stream" ] )
+		if cl_PPlay.currentStream["stream_type"] == "server" then cl_PPlay.stop() end
 	else
 		cl_PPlay.play( info[ "stream" ], info[ "name" ], "server" )
 		cl_PPlay.serverStream["stream"] = info["stream"]
 		cl_PPlay.serverStream["name"] = info["name"]
-		cl_PPlay.serverStream["playing"] = true
 	end
 
 end )

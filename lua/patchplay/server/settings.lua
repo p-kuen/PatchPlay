@@ -30,7 +30,7 @@ function sv_PPlay.saveNewStream( name, url )
 end
 
 function sv_PPlay.deleteStream( where )
-
+	print("deleting!")
 	sql.Query( "DELETE FROM pplay_streamlist WHERE stream = '" .. where .. "'" )
 
 end

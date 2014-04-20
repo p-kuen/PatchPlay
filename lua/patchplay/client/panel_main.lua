@@ -22,13 +22,18 @@ function cl_PPlay.AMenu( Panel )
 	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay", "panel" )
 	cl_PPlay.addbtn( Panel, "Open Stream-List", "openStreamList" )
 	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud" )
+
+	if cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
 
 	if cl_PPlay.serverStream != nil and cl_PPlay.serverStream["playing"] then
+		cl_PPlay.addlbl( Panel, "", "panel" )
 		if cl_PPlay.serverStream["name"] != "" then
 			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.serverStream["name"], "panel" )
 		else
 			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.serverStream["stream"], "panel" )
 		end
+		cl_PPlay.addbtn( Panel, "Stop streaming", "stopServerStreaming" )
 	end
 
 end
@@ -79,33 +84,28 @@ function cl_PPlay.UMenu( Panel )
 	end
 
 	if cl_PPlay.currentStream["stream_type"] == "server" then
-		Panel:AddControl( "Label", {Text = "If the server is playing music you don't like, you can go in private mode: You can decide what you hear and " ..
-			"nobody else will hear this music, just you. At the moment, just Internet radio streams are possible URLs."})
+		cl_PPlay.addlbl( Panel, "If the server is playing music you don't like, you can go in private mode: You can decide what you hear and " ..
+			"nobody else will hear this music, just you. At the moment, just Internet radio streams are possible URLs.", "panel" )
 	end
 
 	cl_PPlay.addbtn( Panel, "Open Private Stream-List", "openPrivateStreamList" )
 	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openPrivateCustom" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openPrivateSoundCloud" )
+	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 1 then
+		cl_PPlay.addlbl( Panel, "", "panel" )
+		cl_PPlay.addbtn( Panel, "Stop streaming", "stopStreaming" )
+	end
+	
 
 	-- Volume Slider
-	Panel:AddControl( "Label", { Text = "\nSet Volume:" } )
-	local sldr = vgui.Create( "Slider" )
-	sldr:SetMin( 0 )
-	sldr:SetMax( 100 )
-	sldr:SetValue( 100 )
-	sldr:SetDecimals( 0 )
+	cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
+	local sldr_vol = cl_PPlay.addsldr( Panel )
 
-	sldr.OnValueChanged = function( panel, value )
+	sldr_vol.OnValueChanged = function( panel, value )
 		if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:SetVolume( value / 100 ) end
 	end
 
-	Panel:AddItem( sldr )
-
-	local chk_nowplay = vgui.Create( "DCheckBoxLabel" )
-	chk_nowplay:SetText( "Show NowPlaying" )
-	chk_nowplay:SetChecked( cl_PPlay.showNowPlaying )
-	chk_nowplay:SetDark( true )
-	
+	local chk_nowplay = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.showNowPlaying )
 
 	function chk_nowplay:OnChange()
 
@@ -117,14 +117,12 @@ function cl_PPlay.UMenu( Panel )
 		
 	end
 
-	Panel:AddItem( chk_nowplay )
-
 	if cl_PPlay.currentStream["stream_type"] == "private" or !cl_PPlay.use then
 
 		if cl_PPlay.serverStream["playing"] and cl_PPlay.serverStream["name"] != "" then
-			Panel:AddControl( "Label", {Text = "The server currently streams " .. cl_PPlay.serverStream["name"]})
+			cl_PPlay.addlbl( Panel, "The server currently streams " .. cl_PPlay.serverStream["name"], "panel" )
 		elseif cl_PPlay.serverStream["playing"] then
-			Panel:AddControl( "Label", {Text = "The server currently streams this Stream-URL: " .. cl_PPlay.serverStream["stream"]})
+			cl_PPlay.addlbl( Panel, "The server currently streams this Stream-URL: " .. cl_PPlay.serverStream["stream"], "panel" )
 		end
 
 		if cl_PPlay.serverStream["playing"] and cl_PPlay.currentStream["stream_type"] == "private" and cl_PPlay.use then
@@ -172,24 +170,3 @@ function cl_PPlay.UpdateMenus()
 
 end
 hook.Add( "SpawnMenuOpen", "PPlay_UpdateMenus", cl_PPlay.UpdateMenus )
-
-
-
-------------------
---  NETWORKING  --
-------------------
-
-function cl_PPlay.sendToServer( url, cmd, streamname )
-	
-	local streamInfo = {
-		stream = url,
-		command = cmd,
-		name = streamname
-	}
-
-	net.Start( "pplay_sendtoserver" )
-		net.WriteTable( streamInfo )
-	net.SendToServer()
-end
-
-
