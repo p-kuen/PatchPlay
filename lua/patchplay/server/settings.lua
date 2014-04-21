@@ -3,7 +3,7 @@
 -------------------------------
 
 -- ANTISPAM AND PROP PROTECTION
-function sv_PPlay.loadStreamSettings( )
+function sv_PPlay.loadStreamSettings()
 
 	if !sql.TableExists( "pplay_streamlist" ) then
 
@@ -26,12 +26,9 @@ end
 function sv_PPlay.sendStreamList( ply )
 
 	net.Start("pplay_sendstreamlist")
-        net.WriteTable( sql.Query("SELECT * FROM pplay_streamlist") )
-    if ply != nil then
-    	net.Send( ply )
-    else
-    	net.Broadcast()
-    end
+		net.WriteTable( sql.Query("SELECT * FROM pplay_streamlist") )
+	if ply != nil then net.Send( ply ) else net.Broadcast() end
+
 end
 
 function sv_PPlay.saveNewStream( name, url )
@@ -41,6 +38,7 @@ function sv_PPlay.saveNewStream( name, url )
 end
 
 function sv_PPlay.deleteStream( where )
+
 	sql.Query( "DELETE FROM pplay_streamlist WHERE stream = '" .. where .. "'" )
 	sv_PPlay.sendStreamList()
 
@@ -60,22 +58,17 @@ function sv_PPlay.firstspawn( ply )
 end
 hook.Add( "PlayerInitialSpawn", "pplay_firstspawn", sv_PPlay.firstspawn )
 
-net.Receive("pplay_deletestream", function( len, pl )
+net.Receive( "pplay_deletestream", function( len, pl )
 
 	sv_PPlay.deleteStream( net.ReadString() )
-
 	sv_PPlay.sendStreamList( )
 
+end )
 
-end)
-
-net.Receive("pplay_savestream", function( len, pl )
+net.Receive( "pplay_savestream", function( len, pl )
 
 	local newStream = net.ReadTable()
-
-	sv_PPlay.saveNewStream( newStream["name"], newStream["url"] )
-
+	sv_PPlay.saveNewStream( newStream[ "name" ], newStream[ "url" ] )
 	sv_PPlay.sendStreamList( )
 
-
-end)
+end )
