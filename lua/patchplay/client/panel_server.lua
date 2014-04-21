@@ -278,15 +278,21 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 	-- SAVE BUTTON FUNCTION
 	function sabtn:OnMousePressed()
 
-		http.Fetch( "https://api.sndcdn.com/resolve?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
+		http.Fetch( "http://api.soundcloud.com/resolve.json?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
 			function( body, len, headers, code )
-				local url = cl_PPlay.getSoundCloudURL( body )
+				local entry = util.JSONToTable( body )
+
+				local url = entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e"
 				if te_name:GetValue() != "" and url != "" then
+					if entry.streamable then
+						cl_PPlay.saveNewServerStream( url, te_name:GetValue() )
 
-					cl_PPlay.saveNewServerStream( url, te_name:GetValue() )
-
-					frm:Close()
-					cl_PPlay.UpdateMenus()
+						frm:Close()
+						cl_PPlay.UpdateMenus()
+					else
+						cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+					end
+					
 
 				elseif url == "" then
 					print("Not saved! URL is empty!")
@@ -316,9 +322,14 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 			end
 		end
 
-		http.Fetch( "https://api.sndcdn.com/resolve?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
+		http.Fetch( "http://api.soundcloud.com/resolve.json?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
 			function( body, len, headers, code )
-				playSC(cl_PPlay.getSoundCloudURL( body ))
+				local entry = util.JSONToTable( body )
+				if entry.streamable then
+					playSC(entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e")
+				else
+					cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+				end
 			end,
 			function( error )
 				print("ERROR with fetching!")

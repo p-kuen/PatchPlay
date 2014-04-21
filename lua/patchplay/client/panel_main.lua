@@ -101,6 +101,10 @@ function cl_PPlay.UMenu( Panel )
 	cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
 	local sldr_vol = cl_PPlay.addsldr( Panel )
 
+	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then
+		cl_PPlay.addsldr( Panel, cl_PPlay.station:GetVolume() * 100 )
+	end
+
 	sldr_vol.OnValueChanged = function( panel, value )
 		if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:SetVolume( value / 100 ) end
 	end

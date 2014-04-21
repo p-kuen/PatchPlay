@@ -89,11 +89,24 @@ function cl_PPlay.stop()
 end
 concommand.Add( "pplay_stopStreaming", cl_PPlay.stop )
 
-function cl_PPlay.getSoundCloudURL( body )
+function cl_PPlay.getSoundCloudInfo( rawURL )
 
-	local trackid = string.match( body, '%d+', string.find( body, "id" ) )
-	local url = "https://api.soundcloud.com/tracks/" .. trackid .. "/stream?client_id=92373aa73cab62ccf53121163bb1246e"
-	return url
+	local entry = {}
+
+
+	http.Fetch( "http://api.soundcloud.com/resolve.json?url="..rawURL.."&client_id=92373aa73cab62ccf53121163bb1246e",
+		function( body, len, headers, code )
+			entry = util.JSONToTable( body )
+			if !entry.streamable then
+				cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+			end
+		end,
+		function( error )
+			print("ERROR with fetching!")
+		end
+	);
+
+	return entry
 
 end
 
