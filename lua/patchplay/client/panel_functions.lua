@@ -133,12 +133,12 @@ end
 --  SLIDER  --
 --------------
 
-function cl_PPlay.addsldr( plist )
+function cl_PPlay.addsldr( plist, value )
 
 	local sldr = vgui.Create( "Slider" )
 	sldr:SetMin( 0 )
 	sldr:SetMax( 100 )
-	sldr:SetValue( 100 )
+	sldr:SetValue( value )
 	sldr:SetDecimals( 0 )
 
 	plist:AddItem( sldr )

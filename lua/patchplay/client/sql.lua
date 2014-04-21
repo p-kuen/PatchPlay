@@ -25,7 +25,7 @@ function cl_PPlay.loadStreamSettings( )
 	
 end
 
-function cl_PPlay.saveNewStream( name, url )
+function cl_PPlay.saveNewStream( url, name )
 
 	sql.Query( "INSERT INTO pplay_privatestreamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "')" )
 

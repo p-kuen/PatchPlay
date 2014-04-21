@@ -255,21 +255,33 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 	-- SAVE BUTTON FUNCTION
 	function sabtn:OnMousePressed()
 
-		local streamURL = getSoundCloudURL( te_url:GetValue() )
+		http.Fetch( "http://api.soundcloud.com/resolve.json?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
+			function( body, len, headers, code )
+				local entry = util.JSONToTable( body )
 
-		if te_name:GetValue() != "" and streamURL != "" then
+				local url = entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e"
+				if te_name:GetValue() != "" and url != "" then
+					if entry.streamable then
+						cl_PPlay.saveNewStream( url, te_name:GetValue() )
+						cl_PPlay.getStreamList()
 
-			cl_PPlay.saveNewStream( te_name:GetValue(), streamURL )
-			cl_PPlay.getStreamList()
+						frm:Close()
+						cl_PPlay.UpdateMenus()
+					else
+						cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+					end
+					
 
-			frm:Close()
-			cl_PPlay.UpdateMenus()
-
-		elseif streamURL == "" then
-			print("Not saved! URL is empty!")
-		elseif te_name:GetValue() == "" then
-			print("Not saved! Name is empty!")
-		end
+				elseif url == "" then
+					print("Not saved! URL is empty!")
+				elseif te_name:GetValue() == "" then
+					print("Not saved! Name is empty!")
+				end
+			end,
+			function( error )
+				print("ERROR with fetching!")
+			end
+		);
 		
 	end
 
@@ -286,10 +298,19 @@ function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 			end
 		end
 
-		local streamURL = getSoundCloudURL( te_url:GetValue() )
-		if streamURL != "" then 
-			timer.Simple( 1, playSC, streamURL )
-		end
+		http.Fetch( "http://api.soundcloud.com/resolve.json?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
+			function( body, len, headers, code )
+				local entry = util.JSONToTable( body )
+				if entry.streamable then
+					playSC(entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e")
+				else
+					cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+				end
+			end,
+			function( error )
+				print("ERROR with fetching!")
+			end
+		);
 
 	end
 end
