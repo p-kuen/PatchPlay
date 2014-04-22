@@ -1,5 +1,6 @@
 function cl_PPlay.openPrivateStreamList( ply, cmd, args )
 
+	PrintTable(args)
 	local selectedStream = {
 		name = "",
 		url = ""
@@ -10,65 +11,48 @@ function cl_PPlay.openPrivateStreamList( ply, cmd, args )
 	-- FRAME
 	local frm = cl_PPlay.addfrm(w, h, "PatchPlay - Private Stream Player", true)
 
-	-- LIST VIEW LABEL
-	local llbl = vgui.Create( "DLabel", frm )
-	llbl:SetPos( 15, 30 )
-	llbl:SetSize( w - 30, 20 )
-	llbl:SetText( "Choose a Stream:" )
-	llbl:SetDark( true )
+	cl_PPlay.addlbl( frm, "Choose a Stream:", "frame", 15, 30 )
 
 	-- STREAM LIST
-	cl_PPlay.slv = vgui.Create( "DListView", frm )
-	cl_PPlay.slv:SetPos( 15, 50 )
-	cl_PPlay.slv:SetSize( w - 30, h - 100 )
-	cl_PPlay.slv:SetMultiSelect( false )
-	cl_PPlay.slv:AddColumn( "Name" )
-	cl_PPlay.slv:AddColumn( "Stream" )
+	local slv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"Name", "Stream"} )
 
-	table.foreach( cl_PPlay.privateStreamList, function( key, value )
+	function fillStreamList()
+		slv:Clear()
+		table.foreach( cl_PPlay.privateStreamList, function( key, value )
 
-		cl_PPlay.slv:AddLine( value["name"], value["stream"] )
+			slv:AddLine( value["name"], value["stream"] )
 
-	end)
+		end)
+	end
 
-	function cl_PPlay.slv:OnClickLine( line, selected )
+	fillStreamList()
+
+	function slv:OnClickLine( line, selected )
 		selectedStream["name"] = line:GetValue(1)
 		selectedStream["url"] = line:GetValue(2)
-		cl_PPlay.slv:ClearSelection()
+		slv:ClearSelection()
 		line:SetSelected( true )
 	end
 
 	-- DELETE BUTTON IN FRAME
-	local dbtn = vgui.Create( "DButton", frm )
-	dbtn:Center()
-	dbtn:SetPos( 15, h - 40 )
-	dbtn:SetSize( 80, 25 )
-	dbtn:SetText( "Delete" )
-	dbtn:SetDark( false )
-
-	function dbtn:Paint()
-		draw.RoundedBox( 0, 0, 0, dbtn:GetWide(), dbtn:GetTall(), Color( 200, 200, 200, 255 ) )
-	end
-
-	-- PLAY BUTTON IN FRAME
-	local pbtn = vgui.Create( "DButton", frm )
-	pbtn:Center()
-	pbtn:SetPos( w - 115, h - 40 )
-	pbtn:SetSize( 100, 25 )
-	pbtn:SetText( "Start Stream" )
-	pbtn:SetDark( false )
-
-	function pbtn:Paint()
-		draw.RoundedBox( 0, 0, 0, pbtn:GetWide(), pbtn:GetTall(), Color( 200, 200, 200, 255 ) )
-	end
+	local dbtn = cl_PPlay.addbtn( frm, "Delete", nil, "frame", {15, h - 40, 80, 25} )
 
 	-- DELETE BUTTON FUNCTION
 	function dbtn:OnMousePressed()
 
 		if selectedStream["url"] != "" then
 			cl_PPlay.deleteStream( selectedStream["url"] )
+			cl_PPlay.getStreamList()
+			fillStreamList()
 		end
 		
+	end
+
+	-- PLAY BUTTON IN FRAME
+	local pbtn = cl_PPlay.addbtn( frm, "Stream", nil, "frame", {w - 115, h - 40, 100, 25} )
+
+	function pbtn:Paint()
+		draw.RoundedBox( 0, 0, 0, pbtn:GetWide(), pbtn:GetTall(), Color( 200, 200, 200, 255 ) )
 	end
 
 	-- PLAY BUTTON FUNCTION
@@ -87,72 +71,40 @@ concommand.Add( "pplay_openPrivateStreamList", cl_PPlay.openPrivateStreamList )
 
 
 --CUSTOM FRAME
-
-
 function cl_PPlay.openPrivateCustom( ply, cmd, args )
-	-- FRAME
-	local frm = vgui.Create( "DFrame" )
-	local w, h = 400, 200
-	frm:SetPos( surface.ScreenWidth() / 2 - ( w / 2 ), surface.ScreenHeight() / 2 - ( h / 2 ) )
-	frm:SetSize( w, h )
-	frm:SetTitle( "PatchPlay - Private URL-Panel" )
-	frm:SetVisible( true )
-	frm:SetDraggable( true )
-	frm:ShowCloseButton( true )
-	frm:SetBackgroundBlur( true )
-	frm:MakePopup()
 
-	function frm:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
-		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 255 ) )
-	end
+	local w, h = 400, 200
+
+	-- FRAME
+	local frm = cl_PPlay.addfrm(w, h, "PatchPlay - Private URL Player", true)
 
 	-- LABEL IN FRAME
-	local clbl = vgui.Create( "DLabel", frm )
-	clbl:SetPos( 15, 30 )
-	clbl:SetText( "Stream URL:" )
-	clbl:SetDark( true )
+	cl_PPlay.addlbl( frm, "Stream URL:", "frame", 15, 30 )
 
 	-- TEXTENTRY IN FRAME
-	local te_url = vgui.Create( "DTextEntry", frm )
-	te_url:SetPos( 15, 50 )
-	te_url:SetSize( w - 30, 22 )
+	local te_url = cl_PPlay.addtext( frm, "frame", { 15, 50 }, { w - 30, 22 } )
 
 	-- PLAY BUTTON IN FRAME
-	local pbtn = vgui.Create( "DButton", frm )
-	pbtn:Center()
-	pbtn:SetPos( w - 115, 82 )
-	pbtn:SetSize( 100, 20 )
-	pbtn:SetText( "Play" )
-	pbtn:SetDark( false )
+	local pbtn = cl_PPlay.addbtn( frm, "Stream", nil, "frame", {w - 115, 82, 100, 20} )
 
-	function pbtn:Paint()
-		draw.RoundedBox( 0, 0, 0, pbtn:GetWide(), pbtn:GetTall(), Color( 200, 200, 200, 255 ) )
+	-- PLAY BUTTON FUNCTION
+	function pbtn:OnMousePressed()
+
+		if te_url:GetValue() != "" and te_name:GetValue() != "" then
+			cl_PPlay.play( te_url:GetValue(), te_name:GetValue(), "private" )
+		elseif te_url:GetValue() != "" then
+			cl_PPlay.play( te_url:GetValue(), "", "private" )
+		end
 	end
 
 	-- STREAM LABEL
-	local slbl = vgui.Create( "DLabel", frm )
-	slbl:SetPos( 15, 112 )
-	slbl:SetSize( w - 30, 15 )
-	slbl:SetText( "If you want to save the stream to the streamlist, choose a name:" )
-	slbl:SetDark( true )
+	cl_PPlay.addlbl( frm, "If you want to save the stream to the streamlist, choose a name:", "frame", 15, 112 )
 
 	-- TEXTENTRY IN FRAME
-	local te_name = vgui.Create( "DTextEntry", frm )
-	te_name:SetPos( 15, 132 )
-	te_name:SetSize( w - 30, 22 )
+	local te_name = cl_PPlay.addtext( frm, "frame", { 15, 132 }, { w - 30, 22 } )
 
 	-- SAVE BUTTON IN FRAME
-	local sabtn = vgui.Create( "DButton", frm )
-	sabtn:Center()
-	sabtn:SetPos( w - 115, h - 37 )
-	sabtn:SetSize( 100, 22 )
-	sabtn:SetText( "Save" )
-	sabtn:SetDark( false )
-
-	function sabtn:Paint()
-		draw.RoundedBox( 0, 0, 0, sabtn:GetWide(), sabtn:GetTall(), Color( 200, 200, 200, 255 ) )
-	end
+	local sabtn = cl_PPlay.addbtn( frm, "Save", nil, "frame", {w - 115, h - 37, 100, 20} )
 
 	-- SAVE BUTTON FUNCTION
 	function sabtn:OnMousePressed()
@@ -165,18 +117,13 @@ function cl_PPlay.openPrivateCustom( ply, cmd, args )
 			frm:Close()
 			cl_PPlay.UpdateMenus()
 
+		elseif te_url:GetValue() == "" then
+			print("Not saved! URL is empty!")
+		elseif te_name:GetValue() == "" then
+			print("Not saved! Name is empty!")
+
 		end
 		
-	end
-
-	-- PLAY BUTTON FUNCTION
-	function pbtn:OnMousePressed()
-
-		if te_url:GetValue() != "" and te_name:GetValue() != "" then
-			cl_PPlay.play( te_url:GetValue(), te_name:GetValue(), "private" )
-		elseif te_url:GetValue() != "" then
-			cl_PPlay.play( te_url:GetValue(), "", "private" )
-		end
 	end
 end
 concommand.Add( "pplay_openPrivateCustom", cl_PPlay.openPrivateCustom )
@@ -185,133 +132,47 @@ concommand.Add( "pplay_openPrivateCustom", cl_PPlay.openPrivateCustom )
 --SOUNDCLOUD FRAME
 function cl_PPlay.openPrivateSoundCloud( ply, cmd, args )
 
-	local url = ""
+	local w, h = 400, 130
 
 	-- FRAME
-	local frm = vgui.Create( "DFrame" )
-	local w, h = 400, 200
-	frm:SetPos( surface.ScreenWidth() / 2 - ( w / 2 ), surface.ScreenHeight() / 2 - ( h / 2 ) )
-	frm:SetSize( w, h )
-	frm:SetTitle( "PatchPlay - Private SoundCloud" )
-	frm:SetVisible( true )
-	frm:SetDraggable( true )
-	frm:ShowCloseButton( true )
-	frm:SetBackgroundBlur( true )
-	frm:MakePopup()
-
-	function frm:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
-		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 255 ) )
-	end
+	local frm = cl_PPlay.addfrm(w, h, "PatchPlay - SoundCloud Player", true)
 
 	-- LABEL IN FRAME
-	local clbl = vgui.Create( "DLabel", frm )
-	clbl:SetPos( 15, 30 )
-	clbl:SetSize( w - 30, 20 )
-	clbl:SetText( "SoundCloud URL:" )
-	clbl:SetDark( true )
+	cl_PPlay.addlbl( frm, "SoundCloud URL:", "frame", 15, 30 )
 
 	-- TEXTENTRY IN FRAME
-	local te_url = vgui.Create( "DTextEntry", frm )
-	te_url:SetPos( 15, 50 )
-	te_url:SetSize( w - 30, 22 )
-
-	-- PLAY BUTTON IN FRAME
-	local pbtn = vgui.Create( "DButton", frm )
-	pbtn:Center()
-	pbtn:SetPos( w - 115, 82 )
-	pbtn:SetSize( 100, 20 )
-	pbtn:SetText( "Play" )
-	pbtn:SetDark( false )
-
-	function pbtn:Paint()
-		draw.RoundedBox( 0, 0, 0, pbtn:GetWide(), pbtn:GetTall(), Color( 200, 200, 200, 255 ) )
-	end
+	local te_url = cl_PPlay.addtext( frm, "frame", { 15, 50 }, { w - 30, 22 } )
 
 	-- STREAM LABEL
-	local slbl = vgui.Create( "DLabel", frm )
-	slbl:SetPos( 15, 112 )
-	slbl:SetSize( w - 30, 15 )
-	slbl:SetText( "If you want to save the track to the streamlist, choose a name:" )
-	slbl:SetDark( true )
+	cl_PPlay.addlbl( frm, "PatchPlay detects the title of the inserted stream!", "frame", 15, 75 )
 
-	-- TEXTENTRY IN FRAME
-	local te_name = vgui.Create( "DTextEntry", frm )
-	te_name:SetPos( 15, 132 )
-	te_name:SetSize( w - 30, 22 )
-
-	-- SAVE BUTTON IN FRAME
-	local sabtn = vgui.Create( "DButton", frm )
-	sabtn:Center()
-	sabtn:SetPos( w - 115, h - 37 )
-	sabtn:SetSize( 100, 22 )
-	sabtn:SetText( "Save" )
-	sabtn:SetDark( false )
-
-	function sabtn:Paint()
-		draw.RoundedBox( 0, 0, 0, sabtn:GetWide(), sabtn:GetTall(), Color( 200, 200, 200, 255 ) )
-	end
-
-	-- SAVE BUTTON FUNCTION
-	function sabtn:OnMousePressed()
-
-		http.Fetch( "http://api.soundcloud.com/resolve.json?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
-			function( body, len, headers, code )
-				local entry = util.JSONToTable( body )
-
-				local url = entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e"
-				if te_name:GetValue() != "" and url != "" then
-					if entry.streamable then
-						cl_PPlay.saveNewStream( url, te_name:GetValue() )
-						cl_PPlay.getStreamList()
-
-						frm:Close()
-						cl_PPlay.UpdateMenus()
-					else
-						cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
-					end
-					
-
-				elseif url == "" then
-					print("Not saved! URL is empty!")
-				elseif te_name:GetValue() == "" then
-					print("Not saved! Name is empty!")
-				end
-			end,
-			function( error )
-				print("ERROR with fetching!")
-			end
-		);
-		
-	end
+	-- PLAY BUTTON IN FRAME
+	local pbtn = cl_PPlay.addbtn( frm, "Stream", nil, "frame", {w - 115, 95, 100, 20} )
 
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
 
-		local function playSC( url )
-			if url != "" then
-				if te_name != nil and te_name:GetValue() != "" then
-					cl_PPlay.play( url, te_name:GetValue(), "private" )
-				else
-					cl_PPlay.play( url, "", "private" )
-				end
-			end
-		end
-
-		http.Fetch( "http://api.soundcloud.com/resolve.json?url="..te_url:GetValue().."&client_id=92373aa73cab62ccf53121163bb1246e",
-			function( body, len, headers, code )
-				local entry = util.JSONToTable( body )
-				if entry.streamable then
-					playSC(entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e")
-				else
-					cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
-				end
-			end,
-			function( error )
-				print("ERROR with fetching!")
-			end
-		);
+		cl_PPlay.getSoundCloudInfo( te_url:GetValue(), function(entry) 
+			cl_PPlay.playStream( entry.stream_url, entry.title, false )
+		end)
 
 	end
+
+	-- SAVE BUTTON IN FRAME
+	local sabtn = cl_PPlay.addbtn( frm, "Save", nil, "frame", {w - 220, 95, 100, 20} )
+
+	-- SAVE BUTTON FUNCTION
+	function sabtn:OnMousePressed()
+
+		cl_PPlay.getSoundCloudInfo( te_url:GetValue(), function(entry) 
+			cl_PPlay.saveNewStream( entry.stream_url, entry.title )
+			cl_PPlay.getStreamList()
+
+			frm:Close()
+			cl_PPlay.UpdateMenus()
+		end)
+		
+	end
+
 end
 concommand.Add( "pplay_openPrivateSoundCloud", cl_PPlay.openPrivateSoundCloud )

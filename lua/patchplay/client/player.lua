@@ -42,7 +42,6 @@ function cl_PPlay.play( url, name, mode, switch )
 			cl_PPlay.currentStream[ "stream_type" ] = mode
 
 			if mode == "server" then
-				cl_PPlay.serverStream[ "playing" ] = true
 				cl_PPlay.serverStream[ "length" ] = station:GetLength()
 			end
 			
@@ -55,6 +54,15 @@ function cl_PPlay.play( url, name, mode, switch )
 		end
 		
 	end )
+	
+end
+
+-- STOP FUNCTOIN
+function cl_PPlay.stop()
+
+	cl_PPlay.station:Stop()
+	cl_PPlay.showNotify( cl_PPlay.currentStream[ "name" ], "stop", 10 )
+	cl_PPlay.UpdateMenus()
 	
 end
 
@@ -80,33 +88,53 @@ function cl_PPlay.getNameFromURL( url )
 
 end
 
--- STOP FUNCTOIN
-function cl_PPlay.stop()
-
-	cl_PPlay.station:Stop()
-	cl_PPlay.showNotify( cl_PPlay.currentStream[ "name" ], "stop", 10 )
-	
-end
 concommand.Add( "pplay_stopStreaming", cl_PPlay.stop )
 
-function cl_PPlay.getSoundCloudInfo( rawURL )
+function cl_PPlay.getSoundCloudInfo( rawURL, cb )
 
 	local entry = {}
 
-
-	http.Fetch( "http://api.soundcloud.com/resolve.json?url="..rawURL.."&client_id=92373aa73cab62ccf53121163bb1246e",
+	local url = "http://api.soundcloud.com/resolve.json?url="..rawURL.."&client_id=92373aa73cab62ccf53121163bb1246e"
+	http.Fetch( url,
 		function( body, len, headers, code )
 			entry = util.JSONToTable( body )
-			if !entry.streamable then
+
+			if entry == nil then
+				cl_PPlay.showNotify( "Unknown error!", "error", 10)
+				return
+			elseif !entry.streamable or entry.original_format == "wav" then
 				cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+				return
 			end
+
+			cb(entry)
 		end,
 		function( error )
 			print("ERROR with fetching!")
 		end
 	);
 
-	return entry
+end
+
+function cl_PPlay.playStream( url, name, server )
+
+	if server == nil then server = false end
+
+	if url != "" and url != nil then
+
+		local fullStream = url .. "?client_id=92373aa73cab62ccf53121163bb1246e"
+
+		if name != "" then
+
+			if server then cl_PPlay.sendToServer( fullStream, name, "play" ) else cl_PPlay.play( fullStream, name, "private" ) end
+		
+		else
+			
+			if server then cl_PPlay.sendToServer( fullStream, "", "play" ) else cl_PPlay.play( fullStream, "", "private" ) end
+		
+		end
+
+	end
 
 end
 
@@ -135,7 +163,6 @@ function cl_PPlay.sendToServer( url, streamname, cmd )
 		command = cmd,
 		name = streamname
 	}
-
 	net.Start( "pplay_sendtoserver" )
 		net.WriteTable( streamInfo )
 	net.SendToServer()
@@ -146,6 +173,7 @@ local function stopServerStreaming( ply, cmd, args )
 
 	cl_PPlay.sendToServer( cl_PPlay.serverStream[ "stream" ], cl_PPlay.serverStream[ "name" ], "stop" )
 	cl_PPlay.serverStream[ "playing" ] = false
+	cl_PPlay.UpdateMenus()
 
 end
 concommand.Add( "pplay_stopServerStreaming", stopServerStreaming )
@@ -166,6 +194,7 @@ net.Receive( "pplay_sendstream", function( len, pl )
 		cl_PPlay.play( info[ "stream" ], info[ "name" ], "server" )
 		cl_PPlay.serverStream[ "stream" ] = info[ "stream" ]
 		cl_PPlay.serverStream[ "name" ] = info[ "name" ]
+		cl_PPlay.serverStream[ "playing" ] = true
 	end
 
 end )

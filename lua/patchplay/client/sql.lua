@@ -27,7 +27,7 @@ end
 
 function cl_PPlay.saveNewStream( url, name )
 
-	sql.Query( "INSERT INTO pplay_privatestreamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "')" )
+	sql.Query( "INSERT INTO pplay_privatestreamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .."?client_id=92373aa73cab62ccf53121163bb1246e" .. "')" )
 
 end
 

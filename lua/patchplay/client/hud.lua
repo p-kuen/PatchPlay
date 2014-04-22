@@ -120,10 +120,11 @@ local function formatTime( rawNumber )
 end
 
 
-local startpos = 0
+local startpos = 1
 local endpos = 17
 local back = false
 local repeater = 0
+local temp = 0
 
 function cl_PPlay.slideText( text, rate )
 
@@ -137,23 +138,35 @@ function cl_PPlay.slideText( text, rate )
 		end
 	end
 
-	if endpos < string.len(text) and !back then
+	if !back and endpos < string.len(text) then
 		pos_change(1)
-	elseif endpos == string.len(text) then
-		back = true
+	elseif !back and endpos == string.len(text) then
+
+		temp = temp + 1
+
+		if temp >= 50 then
+			back = true
+			pos_change(-1)
+			temp = 0
+		end
+
+	elseif back and startpos > 1 then
 		pos_change(-1)
-	elseif startpos > 0 and back then
-		pos_change(-1)
-	elseif startpos == 0 then
-		back = false
-		pos_change(1)
+	elseif back and startpos == 1 then
+		temp = temp + 1
+
+		if temp >= 50 then
+			back = false
+			pos_change(1)
+			temp = 0
+		end
 	end
 
 	return string.sub(text, startpos, endpos)
 end
 
 
-local function drawNowPlaying( streamType )
+local function drawNowPlaying( streamType, state)
 
 	--local tw, th = surface.GetTextSize( notify_text )
 	local w = 150
@@ -172,7 +185,7 @@ local function drawNowPlaying( streamType )
 	end
 
 	if string.len(streamName) > 17 then
-		streamName = cl_PPlay.slideText( streamName, 5 )
+		streamName = cl_PPlay.slideText( streamName, 4 )
 	end	
 
 	local streamType = ""
@@ -194,9 +207,13 @@ local function drawNowPlaying( streamType )
 	draw.SimpleText( streamName, "NowPlaying_text", xpos + 5, ypos + 25 , Color( 75, 75, 75, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 	draw.SimpleText( streamType, "NowPlaying_small", xpos + 5, ypos + 25 + 14 , Color( 100, 100, 100, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 
-	if cl_PPlay.station:GetLength() != nil and cl_PPlay.station:GetLength() != 0 then
+	if cl_PPlay.station:GetLength() != nil and cl_PPlay.station:GetLength() > 0 then
 		local time_percent = cl_PPlay.station:GetTime() / cl_PPlay.station:GetLength()
-		draw.RoundedBox( 0, 0, ypos + 25 + 14 + 15, w * time_percent, 8, Color( 75, 75, 75, 200 ) )
+		if state == 1 then
+			draw.RoundedBox( 0, 0, ypos + 25 + 14 + 15, w * time_percent, 8, Color( 255, 150, 0, 200 ) )
+		else
+			draw.RoundedBox( 0, 0, ypos + 25 + 14 + 15, w * time_percent, 8, Color( 0, 0, 0, 200 ) )
+		end
 	else
 		draw.SimpleText( formatTime(cl_PPlay.station:GetTime()), "NowPlaying_small", xpos + 6, ypos + 25 + 14 + 10 , Color( 100, 100, 100, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 	end
@@ -224,9 +241,9 @@ hook.Add( "HUDPaint", "ShowNotify", cl_PPlay.notify )
 -- STREAM NOTIFICATION
 function cl_PPlay.nowPlaying()
 
-	if cl_PPlay.station == nil or !cl_PPlay.station:IsValid() or cl_PPlay.currentStream == nil or cl_PPlay.station:GetState() != 1 or !cl_PPlay.showNowPlaying then return end
+	if cl_PPlay.station == nil or !cl_PPlay.station:IsValid() or cl_PPlay.currentStream == nil or cl_PPlay.station:GetState() == 0 or !cl_PPlay.showNowPlaying then return end
 
-	drawNowPlaying( cl_PPlay.currentStream["stream_type"] )
+	drawNowPlaying( cl_PPlay.currentStream["stream_type"], cl_PPlay.station:GetState() )
 
 end
 hook.Add( "HUDPaint", "ShowNowPlaying", cl_PPlay.nowPlaying )

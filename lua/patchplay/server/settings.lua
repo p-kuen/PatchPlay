@@ -33,7 +33,7 @@ end
 
 function sv_PPlay.saveNewStream( name, url )
 
-	sql.Query( "INSERT INTO pplay_streamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "')" )
+	sql.Query( "INSERT INTO pplay_streamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "?client_id=92373aa73cab62ccf53121163bb1246e" .. "')" )
 
 end
 

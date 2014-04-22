@@ -20,9 +20,9 @@ function cl_PPlay.AMenu( Panel )
 
 	-- PANEL ELEMENTS
 	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Stream-List", "openStreamList" )
-	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom" )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud" )
+	cl_PPlay.addbtn( Panel, "Open Stream-List", "openStreamList", nil, "server" )
+	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom", nil, "server" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "server" )
 
 	if cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
 
@@ -33,7 +33,7 @@ function cl_PPlay.AMenu( Panel )
 		else
 			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.serverStream["stream"], "panel" )
 		end
-		cl_PPlay.addbtn( Panel, "Stop streaming", "stopServerStreaming" )
+		cl_PPlay.addbtn( Panel, "Stop streaming", "stopServerStreaming", nil, "server" )
 	end
 
 end
@@ -79,7 +79,7 @@ function cl_PPlay.UMenu( Panel )
 
 	Panel:AddItem( chk )
 
-	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 1 then
+	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
 		Panel:AddControl( "Label", {Text = "You are listening in " .. cl_PPlay.currentStream["stream_type"] .. "-mode"})
 	end
 
@@ -88,25 +88,25 @@ function cl_PPlay.UMenu( Panel )
 			"nobody else will hear this music, just you. At the moment, just Internet radio streams are possible URLs.", "panel" )
 	end
 
-	cl_PPlay.addbtn( Panel, "Open Private Stream-List", "openPrivateStreamList" )
-	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openPrivateCustom" )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openPrivateSoundCloud" )
-	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 1 then
+	cl_PPlay.addbtn( Panel, "Open Private Stream-List", "openStreamList", nil, "private" )
+	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openCustom", nil, "private" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "private" )
+	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
 		cl_PPlay.addlbl( Panel, "", "panel" )
-		cl_PPlay.addbtn( Panel, "Stop streaming", "stopStreaming" )
+		cl_PPlay.addbtn( Panel, "Stop streaming", "stopStreaming", nil, "private" )
 	end
 	
 
 	-- Volume Slider
 	cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
-	local sldr_vol = cl_PPlay.addsldr( Panel )
+	local sldr_vol
 
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then
-		cl_PPlay.addsldr( Panel, cl_PPlay.station:GetVolume() * 100 )
-	end
+		sldr_vol = cl_PPlay.addsldr( Panel, cl_PPlay.station:GetVolume() * 100 )
 
-	sldr_vol.OnValueChanged = function( panel, value )
-		if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:SetVolume( value / 100 ) end
+		sldr_vol.OnValueChanged = function( panel, value )
+			if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:SetVolume( value / 100 ) end
+		end
 	end
 
 	local chk_nowplay = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.showNowPlaying )
@@ -130,7 +130,7 @@ function cl_PPlay.UMenu( Panel )
 		end
 
 		if cl_PPlay.serverStream["playing"] and cl_PPlay.currentStream["stream_type"] == "private" and cl_PPlay.use then
-			cl_PPlay.addbtn( Panel, "Switch to Server-Stream", "switchToServer" )
+			cl_PPlay.addbtn( Panel, "Switch to Server-Stream", "switchToServer", nil, "private" )
 		end
 
 	end

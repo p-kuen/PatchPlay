@@ -58,7 +58,7 @@ end
 --  LABEL  --
 -------------
 
-function cl_PPlay.addlbl( plist, text, typ )
+function cl_PPlay.addlbl( plist, text, typ, x, y )
 
 	if typ == "category" then
 
@@ -71,6 +71,14 @@ function cl_PPlay.addlbl( plist, text, typ )
 
 		plist:AddControl( "Label", { Text = text } )
 
+	elseif typ == "frame" then
+
+		local lbl = vgui.Create( "DLabel", plist )
+		lbl:SetPos( x, y )
+		lbl:SetText( text )
+		lbl:SizeToContents()
+		lbl:SetDark( true )
+
 	end
 	
 end
@@ -79,13 +87,21 @@ end
 --   BUTTON   --
 ----------------
 
-function cl_PPlay.addbtn( plist, text, cmd, args )
+function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 
-	local btn = vgui.Create( "DButton" )
+	local btn
+	if typ == "frame"  then btn = vgui.Create( "DButton", plist ) else btn = vgui.Create( "DButton" ) end
 
 	btn:Center()
 	btn:SetText( text )
-	btn:SetDark( true )
+
+	if typ == "frame" then
+		btn:SetPos( args[1], args[2] )
+		btn:SetSize( args[3], args[4] )
+		btn:SetDark( false )
+	else
+		btn:SetDark( true )
+	end
 
 	local col =  Color( 200, 200, 200, 255 )
 
@@ -96,6 +112,10 @@ function cl_PPlay.addbtn( plist, text, cmd, args )
 	function btn:Paint()
 		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), col)
 	end
+
+	if typ != "frame" then plist:AddItem( btn ) end
+
+	if typ == "frame" then return btn end
 
 	btn.DoClick = function()
 
@@ -111,7 +131,7 @@ function cl_PPlay.addbtn( plist, text, cmd, args )
 
 	end
 
-	plist:AddItem( btn )
+	
 
 end
 
@@ -121,11 +141,19 @@ end
 --  TEXTBOX  --
 ---------------
 
-function cl_PPlay.addtext( plist, text )
+function cl_PPlay.addtext( plist, typ, pos, size )
 
-	local tentry = plist:Add( "DTextEntry" )
+	local tentry
 	
-	tentry:SetText( text )
+	if typ == "frame" then
+		tentry = vgui.Create( "DTextEntry", plist )
+		tentry:SetPos( pos[1], pos[2] )
+		tentry:SetSize( size[1], size[2] )
+
+		return tentry
+	else
+		tentry = plist:Add( "DTextEntry" )
+	end
 
 end
 
@@ -144,5 +172,25 @@ function cl_PPlay.addsldr( plist, value )
 	plist:AddItem( sldr )
 
 	return sldr
+
+end
+
+----------------
+--  LISTVIEW  --
+----------------
+
+function cl_PPlay.addlv( plist, x, y, w, h, cols )
+
+	local lv = vgui.Create( "DListView", plist )
+
+	lv:SetPos( x, y )
+	lv:SetSize( w, h )
+	lv:SetMultiSelect( false )
+	
+	table.foreach( cols, function( key, value )
+		lv:AddColumn( value )
+	end )
+	
+	return lv
 
 end
