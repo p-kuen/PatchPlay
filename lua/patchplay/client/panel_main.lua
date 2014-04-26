@@ -24,7 +24,7 @@ function cl_PPlay.AMenu( Panel )
 	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom", nil, "server" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "server" )
 
-	if cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
+	if cl_PPlay.currentStream != nil and cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
 
 	if cl_PPlay.serverStream != nil and cl_PPlay.serverStream["playing"] then
 		cl_PPlay.addlbl( Panel, "", "panel" )
@@ -35,6 +35,8 @@ function cl_PPlay.AMenu( Panel )
 		end
 		cl_PPlay.addbtn( Panel, "Stop streaming", "stopServerStreaming", nil, "server" )
 	end
+
+	cl_PPlay.addbtn( Panel, "Open Server-Playlist", "openPlaylist", nil, "server" )
 
 end
 
@@ -134,6 +136,8 @@ function cl_PPlay.UMenu( Panel )
 		end
 
 	end
+
+	cl_PPlay.addbtn( Panel, "Open Playlist", "openPlaylist", nil, "private" )
 
 end
 

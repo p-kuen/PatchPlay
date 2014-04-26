@@ -57,7 +57,11 @@ local function drawNotify(key, value)
 
 	local notify_text
 	if string.len(value.text) > 35 then
-		notify_text = string.sub(value.text, 0, 35) .. "..."
+		if value.style == "play" or value.style == "stop" then
+			notify_text = string.sub(value.text, 0, 35) .. "..."
+		else
+			notify_text = value.text
+		end
 	else
 		notify_text = value.text
 	end
@@ -80,7 +84,11 @@ local function drawNotify(key, value)
 		value.alpha = value.alpha - fadeSpeed
 	end
 
-	draw.RoundedBox( 0, xpos, ypos, w, h, Color( 255, 255, 255, value.alpha ) )
+	if value.style != "error" and value.style != "info" then
+
+		draw.RoundedBox( 0, xpos, ypos, w, h, Color( 255, 255, 255, value.alpha ) )
+
+	end
 
 	if value.style == "play" then
 
@@ -105,8 +113,15 @@ local function drawNotify(key, value)
 
 	elseif value.style == "error" then
 
-		draw.RoundedBox( 0, xpos, ypos, h, h, Color( 255, 36, 0, value.alpha ) )
-		draw.SimpleText( "ERROR:", "NotificationFont_small", xpos + 110, ypos + 10 , Color( 75, 75, 75, value.alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		draw.RoundedBox( 0, 0, 0, ScrW(), 27, Color( 255, 0, 0, value.alpha ) )
+		draw.SimpleText( "ERROR: " .. notify_text, "NotificationFont_small", 5, 5 , Color( 255, 255, 255, value.alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		return
+
+	elseif value.style == "info" then
+
+		draw.RoundedBox( 0, 0, 0, ScrW(), 27, Color( 0, 191, 255, value.alpha ) )
+		draw.SimpleText( "INFO: " .. notify_text, "NotificationFont_small", 5, 5 , Color( 255, 255, 255, value.alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		return
 
 	end
 

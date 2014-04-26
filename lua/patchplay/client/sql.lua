@@ -1,8 +1,10 @@
--------------------------------
---  LOAD/WRITE SQL SETTINGS  --
--------------------------------
+--------------------
+--  SQL SETTINGS  --
+--------------------
 
--- ANTISPAM AND PROP PROTECTION
+-----------------
+-- STREAM LIST --
+-----------------
 function cl_PPlay.loadStreamSettings( )
 
 	--sql.Query( "DROP TABLE pplay_privatestreamlist" )
@@ -43,7 +45,53 @@ function cl_PPlay.getStreamList()
 
 end
 
+--------------
+-- PLAYLIST --
+--------------
+
+function cl_PPlay.loadPlaylistSettings( )
+
+	--sql.Query( "DROP TABLE pplay_privatestreamlist" )
+
+	if !sql.TableExists( "pplay_privateplaylist" ) then
+
+		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_privateplaylist('name' TEXT, 'stream' TEXT);" )
+		
+		MsgC(
+			Color(255, 150, 0),
+			"[PatchPlay] Created new private PlayList-Table\n"
+		)
+
+	end
+	
+end
+
+function cl_PPlay.addToPlaylist( url, name )
+
+	sql.Query( "INSERT INTO pplay_privateplaylist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url --[[.."?client_id=92373aa73cab62ccf53121163bb1246e"]] .. "')" )
+
+end
+
+function cl_PPlay.removeFromPlaylist( where )
+
+	sql.Query( "DELETE FROM pplay_privateplaylist WHERE stream = '" .. where .. "'" )
+
+end
+
+function cl_PPlay.clearPlaylist( )
+
+	sql.Query( "DELETE FROM pplay_privateplaylist" )
+
+end
+
+function cl_PPlay.getPlaylist()
+
+	cl_PPlay.privatePlaylist = sql.Query("SELECT * FROM pplay_privateplaylist")
+
+end
+
 cl_PPlay.loadStreamSettings( )
+cl_PPlay.loadPlaylistSettings( )
 
 MsgC(
 	Color(255, 150, 0),

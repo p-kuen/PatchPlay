@@ -28,9 +28,9 @@ AddCSLuaFile("patchplay/client/hud.lua")
 if SERVER then
 
 	-- INCLUDE FILES
-	include( "patchplay/server/sender.lua" )
+	include( "patchplay/server/server.lua" )
 	include( "patchplay/server/config.lua" )
-	include( "patchplay/server/settings.lua" )
+	include( "patchplay/server/sql.lua" )
 	
 
 else

@@ -253,11 +253,31 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 		cl_PPlay.getSoundCloudInfo( te_url:GetValue(), function(entry)
 			if args[1] == "private" then
 
-					cl_PPlay.playStream( entry.stream_url, entry.title, false )
+					if entry.kind == "track" then
+
+						cl_PPlay.playStream( entry.stream_url, entry.title, false )
+
+					elseif entry.kind == "playlist" then
+
+						cl_PPlay.fillPlaylist( entry.tracks, false )
+						cl_PPlay.playPlaylist( false )
+
+					end
 				
 			elseif args[1] == "server" then
 
-					cl_PPlay.playStream( entry.stream_url, entry.title, true )
+					if entry.kind == "track" then
+
+						cl_PPlay.playStream( entry.stream_url, entry.title, true )
+
+					elseif entry.kind == "playlist" then
+
+						cl_PPlay.fillPlaylist( entry.tracks, true )
+						timer.Simple(0.1, function()
+							cl_PPlay.playPlaylist( true )
+						end)
+
+					end
 
 			end
 		end)
@@ -291,6 +311,58 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 
 end
 concommand.Add( "pplay_openSoundCloud", cl_PPlay.openSoundCloud )
+
+--PLAYLIST
+function cl_PPlay.openPlayList( ply, cmd, args )
+
+	local strings = {}
+
+	if args[1] == "private" then
+		strings = {
+			frametitle = "PatchPlay - Private Playlist"
+		}
+		
+	elseif args[1] == "server" then
+		strings = {
+			frametitle = "PatchPlay - Server-Playlist"
+		}
+	end
+
+	local w, h = 400, 450
+
+	-- FRAME
+	local frm = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
+
+	-- LABEL IN FRAME
+	cl_PPlay.addlbl( frm, "You can see the current playlist here:", "frame", 15, 30 )
+
+	-- STREAM LIST
+	local plv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"ID", "Name", "Stream"} )
+
+	function fillPlaylist()
+		plv:Clear()
+		if args[1] == "private" and cl_PPlay.privatePlaylist != nil then
+			cl_PPlay.getPlaylist()
+			table.foreach( cl_PPlay.privatePlaylist, function( key, value )
+
+				plv:AddLine( key, value["name"], value["stream"] )
+
+			end)
+			
+		elseif args[1] == "server" and cl_PPlay.serverPlaylist != nil then
+			cl_PPlay.getServerPlaylist( )
+			table.foreach( cl_PPlay.serverPlaylist, function( key, value )
+
+				plv:AddLine( key, value["name"], value["stream"] )
+
+			end)
+		end
+	end
+	
+	fillPlaylist()
+
+end
+concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
 
 function cl_PPlay.saveNewServerStream(stream, text)
 	local newStream = {
