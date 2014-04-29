@@ -70,7 +70,12 @@ function cl_PPlay.addlbl( plist, text, typ, x, y )
 
 	elseif typ == "panel" then
 
-		plist:AddControl( "Label", { Text = text } )
+		local lbl = vgui.Create( "DLabel" )
+		lbl:SetText( text )
+		lbl:SetDark( true )
+		lbl:SizeToContents()
+
+		plist:AddItem( lbl )
 
 	elseif typ == "frame" then
 

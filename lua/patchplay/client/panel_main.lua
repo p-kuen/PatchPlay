@@ -8,7 +8,10 @@ function cl_PPlay.AMenu( Panel )
 	Panel:ClearControls()
 
 	-- CHECK ADMIN
-	if !LocalPlayer():IsSuperAdmin() then
+	if game.SinglePlayer() then
+		cl_PPlay.addlbl( Panel, "You are playing in SinglePlayer! This only works on Multiplayer-Servers.", "panel" )
+		return
+	elseif !LocalPlayer():IsSuperAdmin() then
 		cl_PPlay.addlbl( Panel, "You are not an admin!", "panel" )
 		return
 	end
@@ -57,7 +60,7 @@ function cl_PPlay.UMenu( Panel )
 	-- PANEL ELEMENTS
 
 	-- Main Switch
-	Panel:AddControl( "Label", { Text = "Main Switch:" } )
+	cl_PPlay.addlbl( Panel, "Main Switch:", "panel" )
 	local chk = vgui.Create( "DCheckBoxLabel" )
 	chk:SetText( "Activate PatchPlay" )
 	chk:SetChecked( cl_PPlay.use )
