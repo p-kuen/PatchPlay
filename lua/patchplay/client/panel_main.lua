@@ -23,7 +23,10 @@ function cl_PPlay.AMenu( Panel )
 
 	-- PANEL ELEMENTS
 	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Stream-List", "openStreamList", nil, "server" )
+	cl_PPlay.addbtn( Panel, "Server Stations", "openMy", "my", { "server", "stations" } )
+	cl_PPlay.addbtn( Panel, "Server Tracks", "openMy", "my", { "server", "tracks" } )
+	cl_PPlay.addbtn( Panel, "Server Playlists", "openMy", "my", { "server", "playlists" } )
+	cl_PPlay.addlbl( Panel, "", "panel" )
 	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom", nil, "server" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "server" )
 
@@ -90,12 +93,16 @@ function cl_PPlay.UMenu( Panel )
 
 	if cl_PPlay.currentStream["stream_type"] == "server" then
 		cl_PPlay.addlbl( Panel, "If the server is playing music you don't like, you can go in private mode: You can decide what you hear and " ..
-			"nobody else will hear this music, just you. At the moment, just Internet radio streams are possible URLs.", "panel" )
+			"nobody else will hear this music, just you. There are special panels for SoundCloud and Internet Radio Streams (mp3/m3u)", "panel" )
 	end
 
-	cl_PPlay.addbtn( Panel, "Open Private Stream-List", "openStreamList", nil, "private" )
+	cl_PPlay.addbtn( Panel, "My Stations", "openMy", "my", { "private", "stations" } )
+	cl_PPlay.addbtn( Panel, "My Tracks", "openMy", "my", { "private", "tracks" } )
+	cl_PPlay.addbtn( Panel, "My Playlists", "openMy", "my", { "private", "playlists" } )
+	cl_PPlay.addlbl( Panel, "", "panel" )
 	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openCustom", nil, "private" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "private" )
+
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
 		cl_PPlay.addlbl( Panel, "", "panel" )
 		cl_PPlay.addbtn( Panel, "Stop streaming", "stopStreaming", nil, "private" )

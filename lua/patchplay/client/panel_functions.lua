@@ -19,7 +19,7 @@ function cl_PPlay.addfrm( width, height, title, blur )
 
 	function frm:Paint()
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
-		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 200 ) )
 	end
 
 	return frm
@@ -128,7 +128,13 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 		if cmd == "" then return end
 
 		if args != nil then
-			RunConsoleCommand( "pplay_" .. cmd, args )
+			if typ == "my" then
+				RunConsoleCommand( "pplay_" .. cmd, args[1], args[2] )
+			else
+				RunConsoleCommand( "pplay_" .. cmd, args )
+			end
+
+			
 		else
 			RunConsoleCommand( "pplay_" .. cmd )
 		end
@@ -196,6 +202,11 @@ function cl_PPlay.addlv( plist, x, y, w, h, cols )
 	table.foreach( cols, function( key, value )
 		lv:AddColumn( value )
 	end )
+
+	function lv:Paint()
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 255 ) )
+		--draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 255 ) )
+	end
 	
 	return lv
 

@@ -7,19 +7,41 @@
 -----------------
 function sv_PPlay.loadStreamSettings()
 
-	if !sql.TableExists( "pplay_streamlist" ) then
+	local function createTable()
 
-		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_streamlist('name' TEXT, 'stream' TEXT);" )
+		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_streamlist('name' TEXT, 'stream' TEXT, 'kind' TEXT);" )
 
-		sv_PPlay.saveNewStream( "HouseTimeFM", "http://mp3.stream.tb-group.fm/ht.mp3?" )
-		sv_PPlay.saveNewStream( "TechnoBaseFM", "http://mp3.stream.tb-group.fm/tb.mp3?" )
-		sv_PPlay.saveNewStream( "HardBaseFM", "http://mp3.stream.tb-group.fm/hb.mp3?" )
-		sv_PPlay.saveNewStream( "CoreBaseFM", "http://mp3.stream.tb-group.fm/ct.mp3?" )
+		sv_PPlay.saveNewStream( { name = "Rock - 181.fm - Rock 181 (Active Rock)", url = "http://dir.xiph.org/listen/674163/listen.m3u", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "Dubstep - R1 Dubstep", url = "http://dir-xiph.osuosl.org/listen/364996/listen.m3u", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "Dance - Fusion Radio", url = "http://dir-xiph.osuosl.org/listen/349400/listen.m3u", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "House - ClubbingStation", url = "http://dir-xiph.osuosl.org/listen/573471/listen.m3u", mode = "station" } )
 		
 		MsgC(
 			Color(255, 150, 0),
 			"[PatchPlay] Created new Streamlist-Table\n"
 		)
+
+	end
+
+	if sql.TableExists( "pplay_streamlist" ) then
+
+		local existingstreamlist = sql.Query( "PRAGMA table_info(pplay_streamlist);" )
+
+		if existingstreamlist[3] == nil then
+			MsgC(
+				Color(255, 0, 0),
+				"[PatchPlay] The Streamlist-structure got updated, so we have to delete the Streamlist and create a new one. We are sorry for that!\n"
+			)
+
+			sql.Query( "DROP TABLE pplay_streamlist" )
+
+		end
+
+	end
+
+	if !sql.TableExists( "pplay_streamlist" ) then
+
+		createTable()
 
 	end
 	
@@ -33,10 +55,9 @@ function sv_PPlay.sendStreamList( ply )
 
 end
 
-function sv_PPlay.saveNewStream( name, url )
+function sv_PPlay.saveNewStream( stream )
 
-	sql.Query( "INSERT INTO pplay_streamlist( 'name', 'stream' ) VALUES( '" .. name .. "', '" .. url .. "?client_id=92373aa73cab62ccf53121163bb1246e" .. "')" )
-
+	sql.Query( "INSERT INTO pplay_streamlist( 'name', 'stream', 'kind' ) VALUES( '" .. stream[ "name" ] .. "', '" .. stream[ "url" ] .. "', '".. stream[ "mode" ] .."')" )
 end
 
 function sv_PPlay.deleteStream( where )
@@ -62,8 +83,7 @@ end )
 
 net.Receive( "pplay_savestream", function( len, pl )
 
-	local newStream = net.ReadTable()
-	sv_PPlay.saveNewStream( newStream[ "name" ], newStream[ "url" ] )
+	sv_PPlay.saveNewStream( net.ReadTable() )
 	sv_PPlay.sendStreamList( )
 
 end )

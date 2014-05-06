@@ -1,59 +1,75 @@
-function cl_PPlay.openStreamList( ply, cmd, args )
+function cl_PPlay.openMy( ply, cmd, args )
 
 	local strings = {}
 
+	local kind = args[2]
+	local singleKind = string.sub(kind, 0, -2)
+
 	if args[1] == "private" then
+
 		strings = {
-			frametitle = "PatchPlay - Private Stream Player"
+			frametitle = "PatchPlay - My Private " .. kind:gsub("^%l", string.upper)
 		}
 		
 	elseif args[1] == "server" then
 		strings = {
-			frametitle = "PatchPlay - Stream Player"
+			frametitle = "PatchPlay - Server " .. kind:gsub("^%l", string.upper)
 		}
 	end
 
-	local selectedStream = {
-		name = "",
-		url = ""
-	}
+	local selectedLine
 
-	local w, h = 400, 320
+	local w, h = 500, 350
 
 	-- FRAME
 	local frm = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
 
-	cl_PPlay.addlbl( frm, "Choose a Stream:", "frame", 15, 30 )
+	cl_PPlay.addlbl( frm, "Choose a " .. singleKind .. ":", "frame", 15, 30 )
 
-	-- STREAM LIST
-	local slv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"Name", "Stream"} )
+	-- TRACK LIST
+	local tlv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"Title"} )
 
-	function fillStreamList()
-		slv:Clear()
+	function fillList()
+		
+
+		tlv:Clear()
 		if args[1] == "private" then
 
 			table.foreach( cl_PPlay.privateStreamList, function( key, value )
 
-				slv:AddLine( value["name"], value["stream"] )
+				if value["kind"] == singleKind then
+
+					local line = tlv:AddLine( value["name"] )
+					line.url = value["stream"]
+					line.kind = value["kind"]
+
+				end
 
 			end)
 			
 		elseif args[1] == "server" then
+
 			table.foreach( cl_PPlay.streamList, function( key, value )
 
-				slv:AddLine( value["name"], value["stream"] )
+				if value["kind"] == singleKind then
+
+					local line = tlv:AddLine( value["name"] )
+					line.url = value["stream"]
+					line.kind = value["kind"]
+
+				end
 
 			end)
+
 		end
 	end
 
-	fillStreamList()
+	fillList()
 
-	function slv:OnClickLine( line, selected )
+	function tlv:OnClickLine( line, selected )
 
-		selectedStream["name"] = line:GetValue(1)
-		selectedStream["url"] = line:GetValue(2)
-		slv:ClearSelection()
+		selectedLine = line
+		tlv:ClearSelection()
 		line:SetSelected( true )
 	end
 
@@ -63,21 +79,21 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 	-- DELETE BUTTON FUNCTION
 	function dbtn:OnMousePressed()
 
-		if selectedStream["url"] != "" then
+		if selectedLine != nil then
 
 			if args[1] == "private" then
 
-				cl_PPlay.deleteStream( selectedStream["url"] )
+				cl_PPlay.deleteStream( selectedLine.url )
 				cl_PPlay.getStreamList()
-				fillStreamList()
+				fillList()
 				
 			elseif args[1] == "server" then
 
 				net.Start( "pplay_deletestream" )
-					net.WriteString( selectedStream["url"] )
+					net.WriteString( selectedLine.url )
 				net.SendToServer()
 
-				timer.Simple(0.1, fillStreamList)
+				timer.Simple(0.1, fillList)
 
 			end
 		end
@@ -85,21 +101,55 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 	end
 
 	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Stream", nil, "frame", {w - 115, h - 40, 100, 25} )
+	local pbtn = cl_PPlay.addbtn( frm, "Play", nil, "frame", {w - 115, h - 40, 100, 25} )
 
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
 
-		if selectedStream["url"] != "" then
+		if selectedLine != nil then
 
 			if args[1] == "private" then
+
+					print(selectedLine.kind)
+
+					if selectedLine.kind == "playlist" then
+
+						print("playlist!")
+
+						cl_PPlay.getSoundCloudInfo( selectedLine.url, function(entry)
+
+							cl_PPlay.fillPlaylist( entry.tracks, false )
+							cl_PPlay.playPlaylist( false )
+
+						end)
+
+					else
+
+						print("no playlist")
+						cl_PPlay.play( selectedLine.url, selectedLine:GetValue(1), "private" )
+
+					end
 				
-					cl_PPlay.play( selectedStream["url"], selectedStream["name"], "private" )
-					cl_PPlay.getStreamList()
+					
 				
 			elseif args[1] == "server" then
 
-					cl_PPlay.sendToServer( selectedStream["url"], selectedStream["name"], "play" )
+				if selectedLine.kind == "playlist" then
+
+					cl_PPlay.getSoundCloudInfo( selectedLine.url, function(entry)
+
+						cl_PPlay.fillPlaylist( entry.tracks, true )
+						timer.Simple(0.1, function()
+							cl_PPlay.playPlaylist( true )
+						end)
+
+					end)
+
+				else
+
+					cl_PPlay.sendToServer( selectedLine.url, selectedLine:GetValue(1), "play" )
+
+				end
 
 			end
 
@@ -111,7 +161,7 @@ function cl_PPlay.openStreamList( ply, cmd, args )
 	end
 
 end
-concommand.Add( "pplay_openStreamList", cl_PPlay.openStreamList )
+concommand.Add( "pplay_openMy", cl_PPlay.openMy )
 
 
 --CUSTOM FRAME
@@ -190,23 +240,24 @@ function cl_PPlay.openCustom( ply, cmd, args )
 
 			if args[1] == "private" then
 
-				cl_PPlay.saveNewStream( te_name:GetValue(),  te_url:GetValue() )
+				cl_PPlay.saveNewStream( { name = te_name:GetValue(),  url = te_url:GetValue() .. "?client_id=92373aa73cab62ccf53121163bb1246e", mode = "station" } )
 				cl_PPlay.getStreamList()
 				
 			elseif args[1] == "server" then
 
-				cl_PPlay.saveNewServerStream(te_url:GetValue(), te_name:GetValue())
+				cl_PPlay.saveNewServerStream(te_url:GetValue(), te_name:GetValue(), "station")
 				
 			end
+
+			cl_PPlay.showNotify( "Successfully saved!", "info", 5)
 
 			frm:Close()
 			cl_PPlay.UpdateMenus()
 
 		elseif te_url:GetValue() == "" then
-			print("Not saved! URL is empty!")
+			cl_PPlay.showNotify( "Not saved! URL is empty!", "error", 5)
 		elseif te_name:GetValue() == "" then
-			print("Not saved! Name is empty!")
-
+			cl_PPlay.showNotify( "Not saved! Name is empty!", "error", 5)
 		end
 		
 	end
@@ -291,17 +342,41 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 	-- SAVE BUTTON FUNCTION
 	function sabtn:OnMousePressed()
 
+		if te_url:GetValue() == "" then
+			cl_PPlay.showNotify( "Not saved! URL is empty!", "error", 5)
+			return
+		end
+
 		cl_PPlay.getSoundCloudInfo( te_url:GetValue(), function(entry)
 			if args[1] == "private" then
 
-					cl_PPlay.saveNewStream( entry.stream_url, entry.title )
+				if entry.kind == "playlist" then
+
+					cl_PPlay.saveNewStream( { name = entry.title,  url = te_url:GetValue() .. "?client_id=92373aa73cab62ccf53121163bb1246e", mode = "playlist" } )
+
+				else
+
+					cl_PPlay.saveNewStream( { name = entry.title,  url = entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e", mode = "track" } )
+
+				end
+
 					cl_PPlay.getStreamList()
 				
 			elseif args[1] == "server" then
 
-					cl_PPlay.saveNewServerStream( entry.stream_url, entry.title )
+				if entry.kind == "playlist" then
+
+					cl_PPlay.saveNewServerStream( te_url:GetValue(), entry.title, "playlist" )
+
+				else
+
+					cl_PPlay.saveNewServerStream( entry.stream_url, entry.title, "track" )
+
+				end
 
 			end
+
+			cl_PPlay.showNotify( "Successfully saved!", "info", 5)
 
 			frm:Close()
 			cl_PPlay.UpdateMenus()
@@ -337,7 +412,7 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 	cl_PPlay.addlbl( frm, "You can see the current playlist here:", "frame", 15, 30 )
 
 	-- STREAM LIST
-	local plv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"ID", "Name", "Stream"} )
+	local plv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"Name"} )
 
 	function fillPlaylist()
 		plv:Clear()
@@ -345,7 +420,9 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 			cl_PPlay.getPlaylist()
 			table.foreach( cl_PPlay.privatePlaylist, function( key, value )
 
-				plv:AddLine( key, value["name"], value["stream"] )
+				local line = plv:AddLine( value["name"] )
+				line.id = key
+				line.url = value["stream"]
 
 			end)
 			
@@ -353,7 +430,9 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 			cl_PPlay.getServerPlaylist( )
 			table.foreach( cl_PPlay.serverPlaylist, function( key, value )
 
-				plv:AddLine( key, value["name"], value["stream"] )
+				local line = plv:AddLine( value["name"] )
+				line.id = key
+				line.url = value["stream"]
 
 			end)
 		end
@@ -364,10 +443,11 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 end
 concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
 
-function cl_PPlay.saveNewServerStream(stream, text)
+function cl_PPlay.saveNewServerStream( stream, text, streamtype )
 	local newStream = {
 		name = text,
-		url = stream
+		url = stream .. "?client_id=92373aa73cab62ccf53121163bb1246e", --Adding the client ID
+		mode = streamtype
 	}
 
 	net.Start( "pplay_savestream" )
