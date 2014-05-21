@@ -29,8 +29,8 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	end
 
 	function frm:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 255 ) )
-		draw.RoundedBox( 0, 0, 25, w, 3, Color( 255, 150, 0, 255 ) )
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
+		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255 ) )
 	end
 
 	return frm
@@ -51,10 +51,10 @@ function cl_PPlay.addchk( plist, text, checked )
 
 	function chk:PaintOver()
 
-		draw.RoundedBox( 2, 0, 0, chk:GetTall(), chk:GetTall(), Color( 150, 150, 150, 255 ) )
-		draw.RoundedBox( 2, 1, 1, chk:GetTall() - 2, chk:GetTall() - 2, Color( 240, 240, 240, 255 ) )
+		draw.RoundedBox( 2, 0, 0, chk:GetTall(), chk:GetTall(), Color( 150, 150, 150 ) )
+		draw.RoundedBox( 2, 1, 1, chk:GetTall() - 2, chk:GetTall() - 2, Color( 240, 240, 240 ) )
 		if chk:GetChecked() == false then return end
-		draw.RoundedBox( 2, 2, 2, chk:GetTall() - 4, chk:GetTall() - 4, Color( 88, 144, 222, 255 ) )
+		draw.RoundedBox( 2, 2, 2, chk:GetTall() - 4, chk:GetTall() - 4, Color( 255, 150, 0 ) )
 
 	end
 
@@ -177,8 +177,6 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 		cl_PPlay.UpdateMenus()
 
 	end
-
-	
 
 end
 
