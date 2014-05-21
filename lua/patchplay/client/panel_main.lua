@@ -102,6 +102,7 @@ function cl_PPlay.UMenu( Panel )
 	cl_PPlay.addlbl( Panel, "", "panel" )
 	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openCustom", nil, "private" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "private" )
+	cl_PPlay.addbtn( Panel, "Open Station Browser", "openStationBrowser", nil, "private" )
 
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
 		cl_PPlay.addlbl( Panel, "", "panel" )
@@ -160,10 +161,10 @@ end
 local function CreateMenus()
 
 	-- ADMIN MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Admin", "Admin Settings", "", "", cl_PPlay.AMenu)
+	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Admin", "Server Player", "", "", cl_PPlay.AMenu)
 	
 	-- USER MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_User", "Settings", "", "", cl_PPlay.UMenu)
+	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_User", "Client Player", "", "", cl_PPlay.UMenu)
 
 end
 hook.Add( "PopulateToolMenu", "PPlayMakeMenus", CreateMenus )

@@ -116,7 +116,7 @@ function cl_PPlay.openMy( ply, cmd, args )
 
 						print("playlist!")
 
-						cl_PPlay.getSoundCloudInfo( selectedLine.url, function(entry)
+						cl_PPlay.getJSONInfo( selectedLine.url, function(entry)
 
 							cl_PPlay.fillPlaylist( entry.tracks, false )
 							cl_PPlay.playPlaylist( false )
@@ -136,7 +136,7 @@ function cl_PPlay.openMy( ply, cmd, args )
 
 				if selectedLine.kind == "playlist" then
 
-					cl_PPlay.getSoundCloudInfo( selectedLine.url, function(entry)
+					cl_PPlay.getJSONInfo( selectedLine.url, function(entry)
 
 						cl_PPlay.fillPlaylist( entry.tracks, true )
 						timer.Simple(0.1, function()
@@ -301,7 +301,7 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
 
-		cl_PPlay.getSoundCloudInfo( te_url:GetValue(), function(entry)
+		cl_PPlay.getJSONInfo( te_url:GetValue(), function(entry)
 			if args[1] == "private" then
 
 					if entry.kind == "track" then
@@ -347,7 +347,7 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 			return
 		end
 
-		cl_PPlay.getSoundCloudInfo( te_url:GetValue(), function(entry)
+		cl_PPlay.getJSONInfo( te_url:GetValue(), function(entry)
 			if args[1] == "private" then
 
 				if entry.kind == "playlist" then
@@ -442,6 +442,37 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 
 end
 concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
+
+function cl_PPlay.openStationBrowser( ply, cmd, args )
+
+	local w = ScrW() / 2
+	local h = ScrH() / 3
+
+	local frm = cl_PPlay.addfrm(w, h, "Station Browser powered by Dirble API", true)
+	local scroll = cl_PPlay.addsp( frm, 5, 26, w - 10, h - 33 )
+
+	local apikey = "4fb8ff3c26a13ccbd6fd895ccbf5645845911ce9"
+	local url = "http://api.dirble.com/v1/categories/apikey/" .. apikey .. "/format/json"
+
+	cl_PPlay.getJSONInfo( url, function(entry)
+
+		PrintTable(entry)
+
+		local grid = cl_PPlay.addgrid( scroll, 1, 10, math.floor((w - 27)/ 90), 90 )
+
+		local var, limit = 1, #entry
+		for i = var, limit, 1 do
+			
+			cl_PPlay.addlinkbtn( grid, entry[i].name, entry[i].id )
+
+		end
+
+	end)
+	
+	
+
+end
+concommand.Add( "pplay_openStationBrowser", cl_PPlay.openStationBrowser)
 
 function cl_PPlay.saveNewServerStream( stream, text, streamtype )
 	local newStream = {

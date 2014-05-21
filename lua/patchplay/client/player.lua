@@ -124,21 +124,39 @@ end
 
 concommand.Add( "pplay_stopStreaming", cl_PPlay.stop )
 
-function cl_PPlay.getSoundCloudInfo( rawURL, cb )
+function cl_PPlay.getJSONInfo( rawURL, cb )
 
 	local entry = {}
+	local urlType
 
-	local url = "http://api.soundcloud.com/resolve.json?url="..rawURL.."&client_id=92373aa73cab62ccf53121163bb1246e"
+	local url
+	if string.match(rawURL, "soundcloud") then
+		urlType = "SoundCloud"
+		url = "http://api.soundcloud.com/resolve.json?url="..rawURL.."&client_id=92373aa73cab62ccf53121163bb1246e"
+	elseif string.match(rawURL, "dirble") then
+		urlType = "Dirble"
+		url = rawURL
+	else
+		urlType = "Other"
+		url = rawURL
+	end
+
 	http.Fetch( url,
 		function( body, len, headers, code )
-			entry = util.JSONToTable( body )
 
+			entry = util.JSONToTable( body )
 			if entry == nil then
 				cl_PPlay.showNotify( "Unknown error!", "error", 10)
 				return
-			elseif !entry.streamable or entry.original_format == "wav" then
-				cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
-				return
+			end
+
+			if urlType == "SoundCloud" then
+			
+				if !entry.streamable or entry.original_format == "wav" then
+					cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
+					return
+				end
+
 			end
 
 			cb(entry)

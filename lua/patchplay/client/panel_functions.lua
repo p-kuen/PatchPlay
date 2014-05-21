@@ -13,13 +13,24 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	frm:SetVisible( true )
 	frm:SetDraggable( true )
 	frm:SetSizable( false )
-	frm:ShowCloseButton( true )
+	frm:ShowCloseButton( false )
 	frm:SetBackgroundBlur( blur )
 	frm:MakePopup()
 
+	cl_PPlay.addlbl( frm, title, "frametitle", 5, 5 )
+		-- Close Button
+	local cbtn = cl_PPlay.addbtn( frm, "X", nil, "frame", {w - 35, 5, 30, 15} )
+
+	-- SAVE BUTTON FUNCTION
+	function cbtn:OnMousePressed()
+
+		frm:Close()
+		
+	end
+
 	function frm:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
-		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 200 ) )
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, 25, w, 3, Color( 255, 150, 0, 255 ) )
 	end
 
 	return frm
@@ -85,6 +96,33 @@ function cl_PPlay.addlbl( plist, text, typ, x, y )
 		lbl:SizeToContents()
 		lbl:SetDark( true )
 
+	elseif typ == "frametitle" then
+
+		surface.CreateFont( "TitleFont", {
+			font = "Roboto",
+			size = 20,
+			weight = 500,
+			blursize = 0,
+			scanlines = 0,
+			antialias = true,
+			underline = false,
+			italic = false,
+			strikeout = false,
+			symbol = false,
+			rotary = false,
+			shadow = false,
+			additive = false,
+			outline = false,
+		} )
+
+		local lbl = vgui.Create( "DLabel", plist )
+		lbl:SetPos( x, y )
+		lbl:SetFont("TitleFont")
+		lbl:SetText( text )
+		lbl:SizeToContents()
+		lbl:SetDark( true )
+
+
 	end
 	
 end
@@ -119,9 +157,7 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), col)
 	end
 
-	if typ != "frame" then plist:AddItem( btn ) end
-
-	if typ == "frame" then return btn end
+	if typ != "frame" then plist:AddItem( btn ) else return btn end
 
 	btn.DoClick = function()
 
@@ -133,7 +169,6 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 			else
 				RunConsoleCommand( "pplay_" .. cmd, args )
 			end
-
 			
 		else
 			RunConsoleCommand( "pplay_" .. cmd )
@@ -147,7 +182,24 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 
 end
 
+function cl_PPlay.addlinkbtn( plist, text, args )
 
+	local btn = vgui.Create( "DButton" )
+	btn:Center()
+	btn:SetText( text )
+	btn:SetDark( true )
+
+	btn.args = args
+
+	plist:AddItem( btn )
+
+	btn.DoClick = function()
+
+		print(btn.args)
+
+	end
+
+end
 
 ---------------
 --  TEXTBOX  --
@@ -209,5 +261,36 @@ function cl_PPlay.addlv( plist, x, y, w, h, cols )
 	end
 	
 	return lv
+
+end
+
+-------------------
+--  SCROLLPANEL  --
+-------------------
+
+function cl_PPlay.addsp( plist, x, y, w, h )
+
+	local sp = vgui.Create( "DScrollPanel", plist )
+
+	sp:SetPos( x, y )
+	sp:SetSize( w, h )
+	
+	return sp
+
+end
+
+-------------------
+--  GRIDPANEL  --
+-------------------
+
+function cl_PPlay.addgrid( plist, x, y, cols, colswide )
+
+	local grid = vgui.Create( "DGrid", plist )
+
+	grid:SetPos( x, y )
+	grid:SetCols( cols )
+	grid:SetColWide( colswide )
+	
+	return grid
 
 end

@@ -5,6 +5,7 @@
 - Added option to save playlists
 - Added saving messages
 - Improved playlist frame a bit
+- Added message for SinglePlayer
 "
 
 PAUSE
