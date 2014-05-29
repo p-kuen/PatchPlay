@@ -17,8 +17,8 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	frm:SetBackgroundBlur( blur )
 	frm:MakePopup()
 
-	cl_PPlay.addlbl( frm, title, "frametitle", 5, 5 )
-		-- Close Button
+	--cl_PPlay.addlbl( frm, title, "frametitle", 10, 5 )
+	-- Close Button
 	local cbtn = cl_PPlay.addbtn( frm, "X", nil, "frame", {w - 35, 5, 30, 15} )
 
 	-- SAVE BUTTON FUNCTION
@@ -134,12 +134,12 @@ end
 function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 
 	local btn
-	if typ == "frame"  then btn = vgui.Create( "DButton", plist ) else btn = vgui.Create( "DButton" ) end
+	if typ == "frame" or typ == "function"  then btn = vgui.Create( "DButton", plist ) else btn = vgui.Create( "DButton" ) end
 
 	btn:Center()
 	btn:SetText( text )
 
-	if typ == "frame" then
+	if typ == "frame" or typ == "function" then
 		btn:SetPos( args[1], args[2] )
 		btn:SetSize( args[3], args[4] )
 		btn:SetDark( false )
@@ -157,22 +157,37 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), col)
 	end
 
-	if typ != "frame" then plist:AddItem( btn ) else return btn end
+	if typ != "frame" and typ != "function" then
+		plist:AddItem( btn )
+	elseif typ != "function" then
+		return btn
+	end
 
 	btn.DoClick = function()
 
-		if cmd == "" then return end
+		--print("pressed button '" .. text .. "' with cmd " .. cmd .. " of type " .. type(cmd))
 
-		if args != nil then
+		if type(cmd) == "function" then
+
+			cmd(args[5])
+
+		elseif type(cmd) == "string" then
+
+			if cmd == "" then return end
+
 			if typ == "my" then
 				RunConsoleCommand( "pplay_" .. cmd, args[1], args[2] )
 			else
 				RunConsoleCommand( "pplay_" .. cmd, args )
 			end
-			
+
 		else
-			RunConsoleCommand( "pplay_" .. cmd )
+
+			return
+
 		end
+
+		
 
 		cl_PPlay.UpdateMenus()
 
@@ -185,7 +200,13 @@ function cl_PPlay.addlinkbtn( plist, text, args )
 	local btn = vgui.Create( "DButton" )
 	btn:Center()
 	btn:SetText( text )
+	local tw, th = surface.GetTextSize( text )
+	btn:SetSize( 100 , 30 )
 	btn:SetDark( true )
+
+	function btn:Paint()
+		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), Color( 200, 200, 200, 255 ))
+	end
 
 	btn.args = args
 
@@ -194,6 +215,8 @@ function cl_PPlay.addlinkbtn( plist, text, args )
 	btn.DoClick = function()
 
 		print(btn.args)
+		local apikey = "4fb8ff3c26a13ccbd6fd895ccbf5645845911ce9"
+		cl_PPlay.browse( plist, "childCategories/apikey/"..apikey.."/primaryid/"..btn.args, btn.args )
 
 	end
 
@@ -281,13 +304,14 @@ end
 --  GRIDPANEL  --
 -------------------
 
-function cl_PPlay.addgrid( plist, x, y, cols, colswide )
+function cl_PPlay.addgrid( plist, x, y, cols, size )
 
 	local grid = vgui.Create( "DGrid", plist )
 
 	grid:SetPos( x, y )
 	grid:SetCols( cols )
-	grid:SetColWide( colswide )
+	grid:SetColWide( size )
+	grid:SetRowHeight( size/2 )
 	
 	return grid
 

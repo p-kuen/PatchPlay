@@ -190,7 +190,15 @@ function cl_PPlay.playStream( url, name, server, args )
 
 end
 
+function cl_PPlay.checkValidURL( url )
 
+	if string.match(url, ".pls") and string.match(url, "musicgoal") then
+		return false
+	else
+		return true
+	end
+
+end
 
 function cl_PPlay.checkStationState()
 

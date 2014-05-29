@@ -445,31 +445,50 @@ concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
 
 function cl_PPlay.openStationBrowser( ply, cmd, args )
 
-	local w = ScrW() / 2
+	local strings = {}
+
+	if args[1] == "private" then
+		strings = {
+			frametitle = "PatchPlay - Private Station Browser powered by Dirble API"
+		}
+		
+	elseif args[1] == "server" then
+		strings = {
+			frametitle = "PatchPlay - Server Station Browser powered by Dirble API"
+		}
+	end
+
+	local w = ScrW() / 4
 	local h = ScrH() / 3
 
-	local frm = cl_PPlay.addfrm(w, h, "Station Browser powered by Dirble API", true)
-	local scroll = cl_PPlay.addsp( frm, 5, 26, w - 10, h - 33 )
+	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
 
-	local apikey = "4fb8ff3c26a13ccbd6fd895ccbf5645845911ce9"
-	local url = "http://api.dirble.com/v1/categories/apikey/" .. apikey .. "/format/json"
+	local url = "primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/format/json"
 
-	cl_PPlay.getJSONInfo( url, function(entry)
+	local blist = cl_PPlay.addlv( frm, 5, 30, w - 10, h - 70, {"Choose"} )
+	blist.mode = args[1]
 
-		PrintTable(entry)
+	cl_PPlay.resetBrowse()
+	cl_PPlay.browse( blist )
 
-		local grid = cl_PPlay.addgrid( scroll, 1, 10, math.floor((w - 27)/ 90), 90 )
+	function blist:OnClickLine( line, selected )
 
-		local var, limit = 1, #entry
-		for i = var, limit, 1 do
-			
-			cl_PPlay.addlinkbtn( grid, entry[i].name, entry[i].id )
+		if cl_PPlay.browser.currentBrowse.stage != 3 then
+
+			cl_PPlay.browser.currentBrowse.args = { id = line.id }
+
+		else
+
+			cl_PPlay.browser.currentBrowse.args = { id = line.id, streamurl = line.url, name = line.name }
 
 		end
+		blist:ClearSelection()
+		line:SetSelected( true )
 
-	end)
-	
-	
+	end
+
+	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, blist} )
+	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, blist} )
 
 end
 concommand.Add( "pplay_openStationBrowser", cl_PPlay.openStationBrowser)
