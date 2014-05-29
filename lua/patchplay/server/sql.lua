@@ -2,6 +2,76 @@
 --  SQL SETTINGS  --
 --------------------
 
+function sv_PPlay.loadGeneralSettings()
+
+	local function createTable()
+
+		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_settings('name' TEXT, 'value' TEXT);" )
+
+		sv_PPlay.addSetting( "bigNotification", "true" )
+		sv_PPlay.addSetting( "nowPlaying", "true" )
+		sv_PPlay.addSetting( "allowClients", "true" )
+
+		MsgC(
+			Color(255, 150, 0),
+			"[PatchPlay] Created new Settings-Table\n"
+		)
+
+	end
+
+	if sql.TableExists( "pplay_settings" ) then
+
+		local existingsettings = sql.Query( "PRAGMA table_info(pplay_settings);" )
+
+		if existingsettings[2] == nil then
+			MsgC(
+				Color(255, 0, 0),
+				"[PatchPlay] The Settings-structure got updated, so we have to delete the Settings and create a new one. We are sorry for that!\n"
+			)
+
+			sql.Query( "DROP TABLE pplay_settings" )
+
+		end
+
+	end
+
+	if !sql.TableExists( "pplay_settings" ) then
+
+		createTable()
+
+	end
+
+	sv_PPlay.getSettings()
+
+end
+
+function sv_PPlay.addSetting( name, value )
+
+	sql.Query( "INSERT INTO pplay_settings( 'name', 'value' ) VALUES( '" .. name .. "', '" .. value .. "')" )
+
+end
+
+function sv_PPlay.changeSetting( len, pl )
+
+	local setting = net.ReadTable()
+
+	sql.Query( "UPDATE pplay_settings SET value = '" .. setting.value .. "' WHERE name = '" .. setting.name .. "';" )
+	sv_PPlay.getSettings()
+
+	print(pl:Nick() .. " changed " .. setting.name .. " to " .. setting.value .. "!")
+
+end
+
+function sv_PPlay.getSettings( ply )
+
+	sv_PPlay.Settings = sql.Query("SELECT * FROM pplay_settings")
+
+	net.Start("pplay_sendsettings")
+		net.WriteTable( sv_PPlay.Settings )
+	if ply != nil then net.Send( ply ) else net.Broadcast() end
+
+end
+
 -----------------
 -- STREAM LIST --
 -----------------
@@ -70,6 +140,7 @@ end
 function sv_PPlay.firstspawn( ply )
 
 	sv_PPlay.sendStreamList( ply )
+	sv_PPlay.getSettings( ply )
 
 end
 hook.Add( "PlayerInitialSpawn", "pplay_firstspawn", sv_PPlay.firstspawn )
@@ -153,7 +224,10 @@ function sv_PPlay.sendPlaylist( len, pl )
 end
 net.Receive( "pplay_getplaylist", sv_PPlay.sendPlaylist )
 
+net.Receive( "pplay_settings", sv_PPlay.changeSetting )
 
+
+sv_PPlay.loadGeneralSettings()
 sv_PPlay.loadStreamSettings( )
 sv_PPlay.loadPlaylistSettings( )
 

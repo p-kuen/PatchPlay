@@ -2,6 +2,130 @@
 --  SQL SETTINGS  --
 --------------------
 
+cl_PPlay.Settings = {}
+
+function cl_PPlay.loadGeneralSettings()
+
+	local function createTable()
+
+		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_settings('name' TEXT, 'value' TEXT);" )
+
+		cl_PPlay.addSetting( "bigNotification", "true" )
+		cl_PPlay.addSetting( "nowPlaying", "true" )
+
+		MsgC(
+			Color(255, 150, 0),
+			"[PatchPlay] Created new Settings-Table\n"
+		)
+
+	end
+
+	if sql.TableExists( "pplay_settings" ) then
+
+		local existingsettings = sql.Query( "PRAGMA table_info(pplay_settings);" )
+
+		if existingsettings[2] == nil then
+			MsgC(
+				Color(255, 0, 0),
+				"[PatchPlay] The Settings-structure got updated, so we have to delete the Settings and create a new one. We are sorry for that!\n"
+			)
+
+			sql.Query( "DROP TABLE pplay_settings" )
+
+		end
+
+	end
+
+	if !sql.TableExists( "pplay_settings" ) then
+
+		createTable()
+
+	end
+
+	cl_PPlay.getSettings()
+
+end
+
+function cl_PPlay.addSetting( name, value )
+
+	sql.Query( "INSERT INTO pplay_settings( 'name', 'value' ) VALUES( '" .. name .. "', '" .. value .. "')" )
+
+end
+
+function cl_PPlay.getSettings()
+
+	cl_PPlay.Settings.Client = sql.Query("SELECT * FROM pplay_settings")
+
+end
+
+function cl_PPlay.saveSetting( n, v, server, clchange )
+
+	print("save " .. tostring(server) .. " | " .. tostring(clchange))
+
+	local setting = { name = n, value = v }
+
+	local function send()
+
+		print("saving!")
+
+		net.Start("pplay_settings")
+			net.WriteTable(setting)
+		net.SendToServer()
+
+	end
+
+	if !server or clchange then
+		print("saving also clientside")
+
+		sql.Query( "UPDATE pplay_settings SET value = '" .. setting.value .. "' WHERE name = '" .. setting.name .. "';" )
+		cl_PPlay.getSettings()
+
+	end
+
+	if server then
+
+		print("saving serverside")
+
+		local success = timer.Adjust( "pplay_savedelay", 1, 1, send )
+
+		if !success then timer.Create( "pplay_savedelay", 1, 1, send ) end
+
+	end
+
+
+end
+
+function cl_PPlay.getSetting( name, server )
+
+	local result = false
+
+	local function search( k, v )
+
+		if v.name == name then
+			result = tobool(v.value)
+		end
+
+	end
+
+	if server then
+		table.foreach(cl_PPlay.Settings.Server, search)
+	else
+		table.foreach(cl_PPlay.Settings.Client, search)
+	end
+
+	return result
+
+end
+
+net.Receive( "pplay_sendsettings", function( len, pl )
+
+	print("received settings")
+
+	cl_PPlay.Settings.Server = net.ReadTable()
+	PrintTable(cl_PPlay.Settings.Server)
+
+end )
+
 -----------------
 -- STREAM LIST --
 -----------------
@@ -114,6 +238,7 @@ function cl_PPlay.getPlaylist()
 
 end
 
+cl_PPlay.loadGeneralSettings()
 cl_PPlay.loadStreamSettings( )
 cl_PPlay.loadPlaylistSettings( )
 
@@ -121,3 +246,8 @@ MsgC(
 	Color(255, 150, 0),
 	"\n[PatchPlay] Successfully loaded!\n\n"
 )
+
+
+
+
+

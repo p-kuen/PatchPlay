@@ -41,11 +41,11 @@ function cl_PPlay.resetBrowse()
 
 end
 
-function cl_PPlay.browse( list, backURL )
+function cl_PPlay.browse( list )
 
 	if table.Count(cl_PPlay.browser.currentBrowse.args) == 0 and cl_PPlay.browser.currentBrowse.stage != 0 then return end
 
-	if cl_PPlay.browser.currentBrowse.stage == 3 and backURL == nil then
+	if cl_PPlay.browser.currentBrowse.stage == 3 then
 
 		if list.mode == "server" then
 			cl_PPlay.sendToServer( cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, "play" )
@@ -58,18 +58,14 @@ function cl_PPlay.browse( list, backURL )
 
 	cl_PPlay.browser.currentBrowse.url = ""
 
-	if backURL == nil then
+	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage + 1
 
-		local rawURL = cl_PPlay.BrowseURL.dirble[cl_PPlay.browser.currentBrowse.stage + 1]
-		local newURL = string.gsub( rawURL, "%[(%w+)%]", cl_PPlay.browser.currentBrowse.args )
+	local rawURL = cl_PPlay.BrowseURL.dirble[cl_PPlay.browser.currentBrowse.stage]
+	local newURL = string.gsub( rawURL, "%[(%w+)%]", cl_PPlay.browser.currentBrowse.args )
 
-		cl_PPlay.browser.currentBrowse.url = "http://api.dirble.com/v1/" .. newURL .. "/format/json"
+	cl_PPlay.browser.currentBrowse.url = "http://api.dirble.com/v1/" .. newURL .. "/format/json"
 
-	else
-
-		cl_PPlay.browser.currentBrowse.url = "http://api.dirble.com/v1/" .. backURL .. "/format/json"
-
-	end
+	table.insert( cl_PPlay.browser.history, cl_PPlay.browser.currentBrowse.url )
 
 	cl_PPlay.getJSONInfo( cl_PPlay.browser.currentBrowse.url, function(entry)
 
@@ -77,28 +73,17 @@ function cl_PPlay.browse( list, backURL )
 
 		table.foreach(entry, function( key, value )
 
-			if cl_PPlay.browser.currentBrowse.stage == 2 and !cl_PPlay.checkValidURL( value.streamurl ) or value.status == 0 then return end
+			if cl_PPlay.browser.currentBrowse.stage == 3 and !cl_PPlay.checkValidURL( value.streamurl ) or value.status == 0 then return end
 			
 
 			local line = list:AddLine( value.name )
-			if cl_PPlay.browser.currentBrowse.stage == 2 then
+			if cl_PPlay.browser.currentBrowse.stage == 3 then
 				line.url = value.streamurl
 				line.name = value.name
 			end
 			line.id = value.id
 
 		end)
-
-		if backURL == nil then
-
-			cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage + 1
-			table.insert( cl_PPlay.browser.history, cl_PPlay.browser.currentBrowse )
-
-		else
-
-			cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage - 1
-
-		end
 
 		cl_PPlay.browser.currentBrowse.args = {}
 
@@ -108,17 +93,31 @@ function cl_PPlay.browse( list, backURL )
 
 
 end
---concommand.Add( "pplay_browse", cl_PPlay.browser)
 
 function cl_PPlay.browseback( list )
 
 	if #cl_PPlay.browser.history == 0 then return end
+	print("\n\nBACK!")
+	PrintTable(cl_PPlay.browser.history)
 
-	local rawURL = cl_PPlay.BrowseURL.dirble[cl_PPlay.browser.currentBrowse.stage - 1]
-	local newURL = string.gsub( rawURL, "%[(%w+)%]", cl_PPlay.browser.history[#cl_PPlay.browser.history].args )
+	cl_PPlay.browser.currentBrowse.url = cl_PPlay.browser.history[#cl_PPlay.browser.history - 1]
 
-	cl_PPlay.browse( list, newURL )
+	print(cl_PPlay.browser.currentBrowse.url)
+
+	cl_PPlay.getJSONInfo( cl_PPlay.browser.currentBrowse.url, function(entry)
+
+		list:Clear()
+
+		table.foreach(entry, function( key, value )
+
+			local line = list:AddLine( value.name )
+			line.id = value.id
+
+		end)
+
+	end)
 
 	table.remove( cl_PPlay.browser.history, #cl_PPlay.browser.history )
+	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage - 1
 
 end

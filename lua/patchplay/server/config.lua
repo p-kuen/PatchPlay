@@ -1,3 +1,5 @@
+
+
 ------------------
 --  NETWORKING  --
 ------------------
@@ -19,3 +21,7 @@ util.AddNetworkString( "pplay_addtoplaylist" )
 util.AddNetworkString( "pplay_removefromplaylist" )
 util.AddNetworkString( "pplay_getplaylist" )
 util.AddNetworkString( "pplay_sendplaylist" )
+
+-- Settings
+util.AddNetworkString( "pplay_settings" )
+util.AddNetworkString( "pplay_sendsettings" )

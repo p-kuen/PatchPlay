@@ -127,18 +127,6 @@ function cl_PPlay.UMenu( Panel )
 		end
 	end
 
-	local chk_nowplay = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.showNowPlaying )
-
-	function chk_nowplay:OnChange()
-
-		if !chk_nowplay:GetChecked() then
-			cl_PPlay.showNowPlaying = false
-		else
-			cl_PPlay.showNowPlaying = true
-		end
-		
-	end
-
 	if cl_PPlay.currentStream["stream_type"] == "private" or !cl_PPlay.use then
 
 		if cl_PPlay.serverStream["playing"] and cl_PPlay.serverStream["name"] != "" then
@@ -161,6 +149,87 @@ function cl_PPlay.UMenu( Panel )
 
 end
 
+---------------------
+--  SETTINGS MENU  --
+---------------------
+
+function cl_PPlay.SMenu( Panel )
+
+	-- DELETE CONTROLS
+	Panel:ClearControls()
+
+	-- UPDATE PANELS
+	if not cl_PPlay.SCPanel then
+		cl_PPlay.SCPanel = Panel
+	end
+
+	-- PANEL ELEMENTS
+
+	if cl_PPlay.getSetting( "allowClients", true ) then
+
+		cl_PPlay.addlbl( Panel, "Client Settings for PatchPlay\nThese settings only affect you", "panel" )
+
+		local chk_cl_showNP = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.getSetting( "nowPlaying", false ) )
+
+		function chk_cl_showNP:OnChange()
+
+			cl_PPlay.saveSetting( "nowPlaying", tostring(tobool(chk_cl_showNP:GetChecked())), false )
+
+		end
+
+		local chk_cl_showBN = cl_PPlay.addchk( Panel, "Show Big Notification", cl_PPlay.getSetting( "bigNotification", false ) )
+
+		function chk_cl_showBN:OnChange()
+
+			cl_PPlay.saveSetting( "bigNotification", tostring(tobool(chk_cl_showBN:GetChecked())), false )
+			
+		end
+
+	else
+
+		cl_PPlay.addlbl( Panel, "Changing the settings clientside is disabled for this server!", "panel" )
+
+	end
+
+	-- CHECK ADMIN
+	if !game.SinglePlayer() and !LocalPlayer():IsSuperAdmin() then
+		return
+	elseif game.SinglePlayer() then
+
+	else
+
+		cl_PPlay.addlbl( Panel, "Server Settings for PatchPlay\nThese settings affect everybody on this server!", "panel" )
+
+	end
+
+	--SERVER SETTINGS
+
+	local chk_sv_showNP = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.getSetting( "nowPlaying", true ) )
+
+	function chk_sv_showNP:OnChange()
+
+		cl_PPlay.saveSetting( "nowPlaying", tostring(tobool(chk_sv_showNP:GetChecked())), true, true )
+		
+	end
+
+	local chk_sv_showBN = cl_PPlay.addchk( Panel, "Show Big Notification", cl_PPlay.getSetting( "bigNotification", true ) )
+
+	function chk_sv_showBN:OnChange()
+
+		cl_PPlay.saveSetting( "bigNotification", tostring(tobool(chk_sv_showBN:GetChecked())), true, true )
+		
+	end
+
+	local chk_sv_allowC = cl_PPlay.addchk( Panel, "Allow clients to change the settings for themselves", cl_PPlay.getSetting( "allowClients", true ) )
+
+	function chk_sv_allowC:OnChange()
+
+		cl_PPlay.saveSetting( "allowClients", tostring(tobool(chk_sv_allowC:GetChecked())), true, false )
+		
+	end
+
+end
+
 
 
 --------------------
@@ -174,6 +243,9 @@ local function CreateMenus()
 	
 	-- USER MENU
 	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_User", "Client Player", "", "", cl_PPlay.UMenu)
+
+	-- SETTINGS MENU
+	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Settings", "Settings", "", "", cl_PPlay.SMenu)
 
 end
 hook.Add( "PopulateToolMenu", "PPlayMakeMenus", CreateMenus )
@@ -194,6 +266,11 @@ function cl_PPlay.UpdateMenus()
 	-- USER MENU
 	if cl_PPlay.UCPanel then
 		cl_PPlay.UMenu(cl_PPlay.UCPanel)
+	end
+
+	-- SETTINGS MENU
+	if cl_PPlay.SCPanel then
+		cl_PPlay.SMenu(cl_PPlay.SCPanel)
 	end
 
 end

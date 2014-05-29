@@ -256,7 +256,8 @@ hook.Add( "HUDPaint", "ShowNotify", cl_PPlay.notify )
 -- STREAM NOTIFICATION
 function cl_PPlay.nowPlaying()
 
-	if cl_PPlay.station == nil or !cl_PPlay.station:IsValid() or cl_PPlay.currentStream == nil or cl_PPlay.station:GetState() == 0 or !cl_PPlay.showNowPlaying then return end
+	if !cl_PPlay.getSetting( "nowPlaying" ) then return end
+	if cl_PPlay.station == nil or !cl_PPlay.station:IsValid() or cl_PPlay.currentStream == nil or cl_PPlay.station:GetState() == 0  then return end
 
 	drawNowPlaying( cl_PPlay.currentStream["stream_type"], cl_PPlay.station:GetState() )
 
@@ -264,6 +265,8 @@ end
 hook.Add( "HUDPaint", "ShowNowPlaying", cl_PPlay.nowPlaying )
 
 function cl_PPlay.showNotify( text, style, length )
+
+	if !cl_PPlay.getSetting( "bigNotification" ) then return end
 
 	local curmsg = {}
 	curmsg.text = text
