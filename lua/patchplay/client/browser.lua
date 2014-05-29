@@ -97,12 +97,9 @@ end
 function cl_PPlay.browseback( list )
 
 	if #cl_PPlay.browser.history == 0 then return end
-	print("\n\nBACK!")
 	PrintTable(cl_PPlay.browser.history)
 
 	cl_PPlay.browser.currentBrowse.url = cl_PPlay.browser.history[#cl_PPlay.browser.history - 1]
-
-	print(cl_PPlay.browser.currentBrowse.url)
 
 	cl_PPlay.getJSONInfo( cl_PPlay.browser.currentBrowse.url, function(entry)
 
@@ -119,5 +116,22 @@ function cl_PPlay.browseback( list )
 
 	table.remove( cl_PPlay.browser.history, #cl_PPlay.browser.history )
 	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage - 1
+
+end
+
+function cl_PPlay.addtoplaylist( list )
+
+	if cl_PPlay.browser.currentBrowse.stage != 3 or table.Count(cl_PPlay.browser.currentBrowse.args) == 0 then return end
+
+	if list.mode == "server" then
+
+		cl_PPlay.saveNewServerStream(cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, "station")
+
+	else
+
+		cl_PPlay.saveNewStream( { name = cl_PPlay.browser.currentBrowse.args.name,  url = cl_PPlay.browser.currentBrowse.args.streamurl, mode = "station" } )
+		cl_PPlay.getStreamList()
+
+	end
 
 end

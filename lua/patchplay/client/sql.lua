@@ -60,13 +60,9 @@ end
 
 function cl_PPlay.saveSetting( n, v, server, clchange )
 
-	print("save " .. tostring(server) .. " | " .. tostring(clchange))
-
 	local setting = { name = n, value = v }
 
 	local function send()
-
-		print("saving!")
 
 		net.Start("pplay_settings")
 			net.WriteTable(setting)
@@ -75,7 +71,6 @@ function cl_PPlay.saveSetting( n, v, server, clchange )
 	end
 
 	if !server or clchange then
-		print("saving also clientside")
 
 		sql.Query( "UPDATE pplay_settings SET value = '" .. setting.value .. "' WHERE name = '" .. setting.name .. "';" )
 		cl_PPlay.getSettings()
@@ -83,8 +78,6 @@ function cl_PPlay.saveSetting( n, v, server, clchange )
 	end
 
 	if server then
-
-		print("saving serverside")
 
 		local success = timer.Adjust( "pplay_savedelay", 1, 1, send )
 
@@ -118,8 +111,6 @@ function cl_PPlay.getSetting( name, server )
 end
 
 net.Receive( "pplay_sendsettings", function( len, pl )
-
-	print("received settings")
 
 	cl_PPlay.Settings.Server = net.ReadTable()
 	PrintTable(cl_PPlay.Settings.Server)

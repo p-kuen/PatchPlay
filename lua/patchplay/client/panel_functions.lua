@@ -165,8 +165,6 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 
 	btn.DoClick = function()
 
-		--print("pressed button '" .. text .. "' with cmd " .. cmd .. " of type " .. type(cmd))
-
 		if type(cmd) == "function" then
 
 			cmd(args[5])
@@ -214,7 +212,6 @@ function cl_PPlay.addlinkbtn( plist, text, args )
 
 	btn.DoClick = function()
 
-		print(btn.args)
 		local apikey = "4fb8ff3c26a13ccbd6fd895ccbf5645845911ce9"
 		cl_PPlay.browse( plist, "childCategories/apikey/"..apikey.."/primaryid/"..btn.args, btn.args )
 

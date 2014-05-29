@@ -110,11 +110,7 @@ function cl_PPlay.openMy( ply, cmd, args )
 
 			if args[1] == "private" then
 
-					print(selectedLine.kind)
-
 					if selectedLine.kind == "playlist" then
-
-						print("playlist!")
 
 						cl_PPlay.getJSONInfo( selectedLine.url, function(entry)
 
@@ -125,7 +121,6 @@ function cl_PPlay.openMy( ply, cmd, args )
 
 					else
 
-						print("no playlist")
 						cl_PPlay.play( selectedLine.url, selectedLine:GetValue(1), "private" )
 
 					end
@@ -488,6 +483,7 @@ function cl_PPlay.openStationBrowser( ply, cmd, args )
 	end
 
 	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, blist} )
+	cl_PPlay.addbtn( frm, "Add to My Playlists", cl_PPlay.addtoplaylist, "function", { 120, h - 35, 100, 20, blist} )
 	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, blist} )
 
 end
