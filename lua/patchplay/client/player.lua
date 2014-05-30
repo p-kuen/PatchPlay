@@ -29,6 +29,8 @@ cl_PPlay.privateStreamList = {}
 -- PLAY FUNCTION
 function cl_PPlay.play( url, name, mode, args )
 
+	cl_PPlay.showLoading = true
+
 	if mode == "server" and cl_PPlay.currentStream[ "stream_type" ] == "private" and args["switch"] == nil or !cl_PPlay.use then return end
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:Stop() end
 
@@ -81,10 +83,13 @@ function cl_PPlay.play( url, name, mode, args )
 					net.WriteString( "" )
 				net.SendToServer()
 			end
+
+			cl_PPlay.showLoading = false
 		else
 			print("url: " .. url .. " was invalid")
 			cl_PPlay.showNotify( "INVALID URL!", "error", 10 )
 			cl_PPlay.serverStream[ "playing" ] = false
+			cl_PPlay.showLoading = false
 		end
 		
 	end )
@@ -126,6 +131,8 @@ concommand.Add( "pplay_stopStreaming", cl_PPlay.stop )
 
 function cl_PPlay.getJSONInfo( rawURL, cb )
 
+	cl_PPlay.showLoading = true
+
 	local entry = {}
 	local urlType
 
@@ -162,9 +169,12 @@ function cl_PPlay.getJSONInfo( rawURL, cb )
 
 			end
 
+			cl_PPlay.showLoading = false
+
 			cb(entry)
 		end,
 		function( error )
+			cl_PPlay.showLoading = false
 			print("ERROR with fetching!")
 		end
 	);

@@ -253,6 +253,38 @@ function cl_PPlay.notify()
 end
 hook.Add( "HUDPaint", "ShowNotify", cl_PPlay.notify )
 
+-- LOADING
+local act = 0
+local rewind = false
+function cl_PPlay.loading()
+
+	if !cl_PPlay.showLoading then return end
+
+	local step = 3
+	if act < 50 and !rewind then
+
+		act = act + step
+
+	elseif act >= 50 and !rewind then
+
+		rewind = true
+
+	elseif act > -50 and rewind then
+
+		act = act - step
+
+	elseif act <= -50 and rewind then
+
+		rewind = false
+
+	end
+
+	draw.RoundedBox( 2, ScrW() / 2 - 70, ScrH() - 55, 140, 30, Color( 255, 255, 255, 150 ) )
+	draw.RoundedBox( 2, ScrW() / 2 - 10 + act, ScrH() - 50, 20, 20, Color( 255, 150, 0, 255 ) )
+
+end
+hook.Add( "HUDPaint", "ShowLoading", cl_PPlay.loading )
+
 -- STREAM NOTIFICATION
 function cl_PPlay.nowPlaying()
 

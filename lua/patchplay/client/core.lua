@@ -4,13 +4,15 @@ cl_PPlay.APIKeys = {
 	soundcloud = "92373aa73cab62ccf53121163bb1246e"
 }
 
+cl_PPlay.showLoading = false
+
 function cl_PPlay.saveNewStream( url, name, kind, server )
 
 	if server then
 
 		local newStream = {
 			name = name,
-			url = url
+			url = url,
 			kind = kind
 		}
 
@@ -23,5 +25,7 @@ function cl_PPlay.saveNewStream( url, name, kind, server )
 		sql.Query( "INSERT INTO pplay_privatestreamlist( 'name', 'stream', 'kind' ) VALUES( '" .. name .. "', '" .. url .. "', '".. kind .."')" )
 
 	end
+
+	cl_PPlay.showNotify( "Successfully saved!", "info", 5)
 
 end

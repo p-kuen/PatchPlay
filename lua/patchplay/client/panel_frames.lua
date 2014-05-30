@@ -244,8 +244,6 @@ function cl_PPlay.openCustom( ply, cmd, args )
 				
 			end
 
-			cl_PPlay.showNotify( "Successfully saved!", "info", 5)
-
 			frm:Close()
 			cl_PPlay.UpdateMenus()
 
@@ -514,8 +512,12 @@ function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
 	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 100, {"Choose"} )
 
 	txt_search.target = blist
+	txt_search:RequestFocus()
+	txt_search.OnEnter = function()
 
-	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30, 55, 20, txt_search} )
+		cl_PPlay.search( txt_search )
+		
+	end
 	
 	blist.mode = args[1]
 	blist.type = "track"
@@ -528,6 +530,7 @@ function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
 
 	end
 
+	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30, 55, 20, txt_search} )
 	cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, "function", { w - 230, h - 35, 100, 20, blist} )
 	cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, "function", { w - 115, h - 35, 100, 20, blist} )
 
