@@ -113,7 +113,6 @@ end
 net.Receive( "pplay_sendsettings", function( len, pl )
 
 	cl_PPlay.Settings.Server = net.ReadTable()
-	PrintTable(cl_PPlay.Settings.Server)
 
 end )
 
@@ -128,10 +127,10 @@ function cl_PPlay.loadStreamSettings( )
 
 		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_privatestreamlist('name' TEXT, 'stream' TEXT, 'kind' TEXT);" )
 
-		cl_PPlay.saveNewStream( { name = "Rock - 181.fm - Rock 181 (Active Rock)", url = "http://dir.xiph.org/listen/674163/listen.m3u", mode = "station" } )
-		cl_PPlay.saveNewStream( { name = "Dubstep - R1 Dubstep", url = "http://dir-xiph.osuosl.org/listen/364996/listen.m3u", mode = "station" } )
-		cl_PPlay.saveNewStream( { name = "Dance - Fusion Radio", url = "http://dir-xiph.osuosl.org/listen/349400/listen.m3u", mode = "station" } )
-		cl_PPlay.saveNewStream( { name = "House - ClubbingStation", url = "http://dir-xiph.osuosl.org/listen/573471/listen.m3u", mode = "station" } )
+		cl_PPlay.saveNewStream( "http://dir.xiph.org/listen/674163/listen.m3u", "Rock - 181.fm - Rock 181 (Active Rock)", "station" )
+		cl_PPlay.saveNewStream( "http://dir-xiph.osuosl.org/listen/364996/listen.m3u", "Dubstep - R1 Dubstep", "station" )
+		cl_PPlay.saveNewStream( "http://dir-xiph.osuosl.org/listen/349400/listen.m3u", "Dance - Fusion Radio", "station" )
+		cl_PPlay.saveNewStream( "http://dir-xiph.osuosl.org/listen/573471/listen.m3u", "House - ClubbingStation", "station" )
 
 		MsgC(
 			Color(255, 150, 0),
@@ -164,12 +163,6 @@ function cl_PPlay.loadStreamSettings( )
 
 	cl_PPlay.getStreamList()
 	
-end
-
-function cl_PPlay.saveNewStream( stream )
-
-	sql.Query( "INSERT INTO pplay_privatestreamlist( 'name', 'stream', 'kind' ) VALUES( '" .. stream[ "name" ] .. "', '" .. stream[ "url" ] .. "', '".. stream[ "mode" ] .."')" )
-
 end
 
 function cl_PPlay.deleteStream( where )

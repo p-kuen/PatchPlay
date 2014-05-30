@@ -235,12 +235,12 @@ function cl_PPlay.openCustom( ply, cmd, args )
 
 			if args[1] == "private" then
 
-				cl_PPlay.saveNewStream( { name = te_name:GetValue(),  url = te_url:GetValue() .. "?client_id=92373aa73cab62ccf53121163bb1246e", mode = "station" } )
+				cl_PPlay.saveNewStream( te_url:GetValue(), te_name:GetValue(), "station" )
 				cl_PPlay.getStreamList()
 				
 			elseif args[1] == "server" then
 
-				cl_PPlay.saveNewServerStream(te_url:GetValue(), te_name:GetValue(), "station")
+				cl_PPlay.saveNewStream( te_url:GetValue(), te_name:GetValue(), "station", true)
 				
 			end
 
@@ -347,11 +347,11 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 
 				if entry.kind == "playlist" then
 
-					cl_PPlay.saveNewStream( { name = entry.title,  url = te_url:GetValue() .. "?client_id=92373aa73cab62ccf53121163bb1246e", mode = "playlist" } )
+					cl_PPlay.saveNewStream( te_url:GetValue() .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist" )
 
 				else
 
-					cl_PPlay.saveNewStream( { name = entry.title,  url = entry.stream_url .. "?client_id=92373aa73cab62ccf53121163bb1246e", mode = "track" } )
+					cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track" )
 
 				end
 
@@ -361,11 +361,11 @@ function cl_PPlay.openSoundCloud( ply, cmd, args )
 
 				if entry.kind == "playlist" then
 
-					cl_PPlay.saveNewServerStream( te_url:GetValue(), entry.title, "playlist" )
+					cl_PPlay.saveNewStream( te_url:GetValue()  .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist", true )
 
 				else
 
-					cl_PPlay.saveNewServerStream( entry.stream_url, entry.title, "track" )
+					cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track", true )
 
 				end
 
@@ -462,6 +462,7 @@ function cl_PPlay.openStationBrowser( ply, cmd, args )
 
 	local blist = cl_PPlay.addlv( frm, 5, 30, w - 10, h - 70, {"Choose"} )
 	blist.mode = args[1]
+	blist.type = "station"
 
 	cl_PPlay.resetBrowse()
 	cl_PPlay.browse( blist )
@@ -483,20 +484,53 @@ function cl_PPlay.openStationBrowser( ply, cmd, args )
 	end
 
 	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, blist} )
-	cl_PPlay.addbtn( frm, "Add to My Playlists", cl_PPlay.addtoplaylist, "function", { 120, h - 35, 100, 20, blist} )
+	cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, "function", { 120, h - 35, 100, 20, blist} )
 	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, blist} )
 
 end
 concommand.Add( "pplay_openStationBrowser", cl_PPlay.openStationBrowser)
 
-function cl_PPlay.saveNewServerStream( stream, text, streamtype )
-	local newStream = {
-		name = text,
-		url = stream .. "?client_id=92373aa73cab62ccf53121163bb1246e", --Adding the client ID
-		mode = streamtype
-	}
+function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
 
-	net.Start( "pplay_savestream" )
-		net.WriteTable( newStream )
-	net.SendToServer()
+	local strings = {}
+
+	if args[1] == "private" then
+		strings = {
+			frametitle = "PatchPlay - Private SoundCloud Browser powered by SoundCloud API"
+		}
+		
+	elseif args[1] == "server" then
+		strings = {
+			frametitle = "PatchPlay - Server SoundCloud Browser powered by SoundCloud API"
+		}
+	end
+
+	local w = ScrW() / 4
+	local h = ScrH() / 3
+
+	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
+
+	local txt_search = cl_PPlay.addtext( frm, "frame", { 15, 30 }, { w - 100, 20} )
+	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 100, {"Choose"} )
+
+	txt_search.target = blist
+
+	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30, 55, 20, txt_search} )
+	
+	blist.mode = args[1]
+	blist.type = "track"
+
+	function blist:OnClickLine( line, selected )
+
+		blist:ClearSelection()
+		blist.selected = line
+		line:SetSelected( true )
+
+	end
+
+	cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, "function", { w - 230, h - 35, 100, 20, blist} )
+	cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, "function", { w - 115, h - 35, 100, 20, blist} )
+
 end
+concommand.Add( "pplay_openSoundCloudBrowser", cl_PPlay.openSoundCloudBrowser)
+

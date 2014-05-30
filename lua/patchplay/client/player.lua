@@ -130,7 +130,10 @@ function cl_PPlay.getJSONInfo( rawURL, cb )
 	local urlType
 
 	local url
-	if string.match(rawURL, "soundcloud") then
+	if string.match(rawURL, "api.soundcloud") then
+		urlType = "SoundCloud API"
+		url = rawURL
+	elseif string.match(rawURL, "soundcloud") then
 		urlType = "SoundCloud"
 		url = "http://api.soundcloud.com/resolve.json?url="..rawURL.."&client_id=92373aa73cab62ccf53121163bb1246e"
 	elseif string.match(rawURL, "dirble") then

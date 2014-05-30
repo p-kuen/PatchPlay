@@ -1,8 +1,3 @@
-cl_PPlay.APIKeys = {
-	
-	dirble = "4fb8ff3c26a13ccbd6fd895ccbf5645845911ce9"
-}
-
 cl_PPlay.browser = {}
 
 cl_PPlay.browser.currentBrowse = {
@@ -22,6 +17,12 @@ cl_PPlay.BrowseURL = {
 	"primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble,
 	"childCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/primaryid/[id]",
 	"stations/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]"
+
+	},
+
+	soundcloud = {
+
+		search = "tracks.json?client_id=" .. cl_PPlay.APIKeys.soundcloud .. "&q=[searchquery]"
 
 	}
 
@@ -97,7 +98,6 @@ end
 function cl_PPlay.browseback( list )
 
 	if #cl_PPlay.browser.history == 0 then return end
-	PrintTable(cl_PPlay.browser.history)
 
 	cl_PPlay.browser.currentBrowse.url = cl_PPlay.browser.history[#cl_PPlay.browser.history - 1]
 
@@ -119,18 +119,71 @@ function cl_PPlay.browseback( list )
 
 end
 
-function cl_PPlay.addtoplaylist( list )
+function cl_PPlay.search( txt )
 
-	if cl_PPlay.browser.currentBrowse.stage != 3 or table.Count(cl_PPlay.browser.currentBrowse.args) == 0 then return end
+	local rawURL = "http://api.soundcloud.com/" .. cl_PPlay.BrowseURL.soundcloud.search
+	local newURL = string.gsub( rawURL, "%[(%w+)%]", string.lower(txt:GetValue()) )
+	newURL = string.gsub( newURL, "%s", "%%20" )
+
+	cl_PPlay.getJSONInfo( newURL, function(entry)
+
+		table.foreach(entry, function(key, track)
+
+			if track.streamable then
+
+				local line = txt.target:AddLine( track.title )
+				line.title = track.title
+				line.uri = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
+
+			end
+
+		end)
+
+	end)
+
+end
+
+function cl_PPlay.searchplay( list )
+
+	if !list.selected.uri then return end
 
 	if list.mode == "server" then
+		cl_PPlay.sendToServer( list.selected.uri, list.selected.title, "play" )
+	else
+		cl_PPlay.play( list.selected.uri, list.selected.title, "private" )
+	end
 
-		cl_PPlay.saveNewServerStream(cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, "station")
+end
+
+function cl_PPlay.addtomy( list )
+
+	if list.type == "station" then
+
+		if cl_PPlay.browser.currentBrowse.stage != 3 or table.Count(cl_PPlay.browser.currentBrowse.args) == 0 then return end
+
+		if list.mode == "server" then
+
+			cl_PPlay.saveNewStream(cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, list.type, true)
+
+		else
+
+			cl_PPlay.saveNewStream( cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, list.type )
+			cl_PPlay.getStreamList()
+
+		end
 
 	else
 
-		cl_PPlay.saveNewStream( { name = cl_PPlay.browser.currentBrowse.args.name,  url = cl_PPlay.browser.currentBrowse.args.streamurl, mode = "station" } )
-		cl_PPlay.getStreamList()
+		if list.mode == "server" then
+
+			cl_PPlay.saveNewStream(list.selected.uri, list.selected.title, list.type, true)
+
+		else
+
+			cl_PPlay.saveNewStream( list.selected.uri, list.selected.title, list.type )
+			cl_PPlay.getStreamList()
+
+		end
 
 	end
 

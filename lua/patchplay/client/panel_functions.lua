@@ -131,7 +131,7 @@ end
 --   BUTTON   --
 ----------------
 
-function cl_PPlay.addbtn( plist, text, cmd, typ, args )
+function cl_PPlay.addbtn( plist, text, cmd, typ, args, ... )
 
 	local btn
 	if typ == "frame" or typ == "function"  then btn = vgui.Create( "DButton", plist ) else btn = vgui.Create( "DButton" ) end
@@ -163,11 +163,13 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args )
 		return btn
 	end
 
+	local vararg = {...}
+
 	btn.DoClick = function()
 
 		if type(cmd) == "function" then
 
-			cmd(args[5])
+			cmd(args[5], vararg)
 
 		elseif type(cmd) == "string" then
 

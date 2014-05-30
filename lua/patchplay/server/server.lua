@@ -69,3 +69,10 @@ net.Receive( "pplay_askthetime", function( len, pl )
 	net.Send( pl )
 
 end )
+
+net.Receive( "pplay_savestream", function( len, pl )
+
+	sv_PPlay.saveNewStream( net.ReadTable() )
+	sv_PPlay.sendStreamList( )
+
+end )

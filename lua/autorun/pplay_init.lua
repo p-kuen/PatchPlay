@@ -12,6 +12,7 @@ cl_PPlay = {}
 -------------------------
 
 AddCSLuaFile()
+AddCSLuaFile("patchplay/client/core.lua")
 AddCSLuaFile("patchplay/client/player.lua")
 AddCSLuaFile("patchplay/client/playlist.lua")
 AddCSLuaFile("patchplay/client/panel_functions.lua")
@@ -37,6 +38,7 @@ if SERVER then
 
 else
 
+	include( "patchplay/client/core.lua" )
 	include( "patchplay/client/player.lua" )
 	include( "patchplay/client/playlist.lua" )
 	include( "patchplay/client/panel_functions.lua" )

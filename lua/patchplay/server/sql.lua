@@ -152,12 +152,7 @@ net.Receive( "pplay_deletestream", function( len, pl )
 
 end )
 
-net.Receive( "pplay_savestream", function( len, pl )
 
-	sv_PPlay.saveNewStream( net.ReadTable() )
-	sv_PPlay.sendStreamList( )
-
-end )
 
 --------------
 -- PLAYLIST --

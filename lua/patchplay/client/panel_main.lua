@@ -30,6 +30,7 @@ function cl_PPlay.AMenu( Panel )
 	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom", nil, "server" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "server" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", "openStationBrowser", nil, "server" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", "openSoundCloudBrowser", nil, "server" )
 
 	if cl_PPlay.currentStream != nil and cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
 
@@ -108,6 +109,7 @@ function cl_PPlay.UMenu( Panel )
 	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openCustom", nil, "private" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "private" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", "openStationBrowser", nil, "private" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", "openSoundCloudBrowser", nil, "private" )
 
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
 		cl_PPlay.addlbl( Panel, "", "panel" )
