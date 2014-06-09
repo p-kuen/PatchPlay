@@ -469,11 +469,11 @@ function cl_PPlay.openStationBrowser( ply, cmd, args )
 
 		if cl_PPlay.browser.currentBrowse.stage != 3 then
 
-			cl_PPlay.browser.currentBrowse.args = { id = line.id }
+			blist.selected = { id = line.id }
 
 		else
 
-			cl_PPlay.browser.currentBrowse.args = { id = line.id, streamurl = line.url, name = line.name }
+			blist.selected = { id = line.id, streamurl = line.url, name = line.name }
 
 		end
 		blist:ClearSelection()

@@ -35,7 +35,6 @@ function cl_PPlay.resetBrowse()
 		url = "",
 		stage = 0,
 		args = {}
-
 	}
 
 	cl_PPlay.browser.history = {}
@@ -44,14 +43,14 @@ end
 
 function cl_PPlay.browse( list )
 
-	if table.Count(cl_PPlay.browser.currentBrowse.args) == 0 and cl_PPlay.browser.currentBrowse.stage != 0 then return end
+	if table.Count(list.selected) == 0 and cl_PPlay.browser.currentBrowse.stage != 0 then return end
 
 	if cl_PPlay.browser.currentBrowse.stage == 3 then
 
 		if list.mode == "server" then
-			cl_PPlay.sendToServer( cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, "play" )
+			cl_PPlay.sendToServer( blist.selected.streamurl, blist.selected.name, "play" )
 		else
-			cl_PPlay.play( cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, "private" )
+			cl_PPlay.play( blist.selected.streamurl, blist.selected.name, "private" )
 		end
 		return
 
@@ -62,7 +61,7 @@ function cl_PPlay.browse( list )
 	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage + 1
 
 	local rawURL = cl_PPlay.BrowseURL.dirble[cl_PPlay.browser.currentBrowse.stage]
-	local newURL = string.gsub( rawURL, "%[(%w+)%]", cl_PPlay.browser.currentBrowse.args )
+	local newURL = string.gsub( rawURL, "%[(%w+)%]", blist.selected )
 
 	cl_PPlay.browser.currentBrowse.url = "http://api.dirble.com/v1/" .. newURL .. "/format/json"
 
@@ -86,7 +85,7 @@ function cl_PPlay.browse( list )
 
 		end)
 
-		cl_PPlay.browser.currentBrowse.args = {}
+		blist.selected = {}
 
 
 	end)

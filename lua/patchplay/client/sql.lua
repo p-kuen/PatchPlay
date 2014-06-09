@@ -4,43 +4,54 @@
 
 cl_PPlay.Settings = {}
 
-function cl_PPlay.loadGeneralSettings()
+local function createTable( name, values, cb)
 
-	local function createTable()
+	local function create()
 
-		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_settings('name' TEXT, 'value' TEXT);" )
+		local v = "'" .. table.concat( values, "' TEXT, '") .. "' TEXT"
 
-		cl_PPlay.addSetting( "bigNotification", "true" )
-		cl_PPlay.addSetting( "nowPlaying", "true" )
+		sql.Query( "CREATE TABLE IF NOT EXISTS " .. name .. "(" .. v .. ");" )
 
 		MsgC(
-			Color(255, 150, 0),
-			"[PatchPlay] Created new Settings-Table\n"
+			Color(0, 255, 0),
+			"[PatchPlay] Created new table: " .. name .. "\n"
 		)
+
+		cb()
 
 	end
 
-	if sql.TableExists( "pplay_settings" ) then
+	if !sql.TableExists( name ) then
 
-		local existingsettings = sql.Query( "PRAGMA table_info(pplay_settings);" )
+		create()
 
-		if existingsettings[2] == nil then
+	else
+
+		local existingsettings = sql.Query( "PRAGMA table_info(" .. name .. ");" )
+
+		if existingsettings[#values] == nil then
 			MsgC(
 				Color(255, 0, 0),
-				"[PatchPlay] The Settings-structure got updated, so we have to delete the Settings and create a new one. We are sorry for that!\n"
+				"[PatchPlay] The table-structure of " .. name .. " is outdated! Recreating table now...\n"
 			)
 
-			sql.Query( "DROP TABLE pplay_settings" )
+			sql.Query( "DROP TABLE " .. name )
+			create()
 
 		end
 
 	end
 
-	if !sql.TableExists( "pplay_settings" ) then
+end
 
-		createTable()
+function cl_PPlay.loadGeneralSettings()
 
-	end
+	createTable( "pplay_settings", {"name", "value"}, function()
+
+		cl_PPlay.addSetting( "bigNotification", "true" )
+		cl_PPlay.addSetting( "nowPlaying", "true" )
+
+	end)
 
 	cl_PPlay.getSettings()
 
@@ -121,45 +132,14 @@ end )
 -----------------
 function cl_PPlay.loadStreamSettings( )
 
-	--sql.Query( "DROP TABLE pplay_privatestreamlist" )
-
-	local function createTable()
-
-		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_privatestreamlist('name' TEXT, 'stream' TEXT, 'kind' TEXT);" )
+	createTable( "pplay_privatestreamlist", {"name", "stream", "kind"}, function()
 
 		cl_PPlay.saveNewStream( "http://dir.xiph.org/listen/674163/listen.m3u", "Rock - 181.fm - Rock 181 (Active Rock)", "station" )
 		cl_PPlay.saveNewStream( "http://dir-xiph.osuosl.org/listen/364996/listen.m3u", "Dubstep - R1 Dubstep", "station" )
 		cl_PPlay.saveNewStream( "http://dir-xiph.osuosl.org/listen/349400/listen.m3u", "Dance - Fusion Radio", "station" )
 		cl_PPlay.saveNewStream( "http://dir-xiph.osuosl.org/listen/573471/listen.m3u", "House - ClubbingStation", "station" )
 
-		MsgC(
-			Color(255, 150, 0),
-			"[PatchPlay] Created new private Streamlist-Table\n"
-		)
-
-	end
-
-	if sql.TableExists( "pplay_privatestreamlist" ) then
-
-		local existingstreamlist = sql.Query( "PRAGMA table_info(pplay_privatestreamlist);" )
-
-		if existingstreamlist[3] == nil then
-			MsgC(
-				Color(255, 0, 0),
-				"[PatchPlay] The Streamlist-structure got updated, so we have to delete the Streamlist and create a new one. We are sorry for that!\n"
-			)
-
-			sql.Query( "DROP TABLE pplay_privatestreamlist" )
-
-		end
-
-	end
-
-	if !sql.TableExists( "pplay_privatestreamlist" ) then
-
-		createTable()
-
-	end
+	end)
 
 	cl_PPlay.getStreamList()
 	
@@ -183,18 +163,9 @@ end
 
 function cl_PPlay.loadPlaylistSettings( )
 
-	--sql.Query( "DROP TABLE pplay_privatestreamlist" )
+	createTable( "pplay_privateplaylist", {"name", "stream"}, function()
 
-	if !sql.TableExists( "pplay_privateplaylist" ) then
-
-		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_privateplaylist('name' TEXT, 'stream' TEXT);" )
-		
-		MsgC(
-			Color(255, 150, 0),
-			"[PatchPlay] Created new private PlayList-Table\n"
-		)
-
-	end
+	end)
 	
 end
 
