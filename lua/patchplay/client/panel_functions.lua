@@ -225,14 +225,31 @@ end
 --  TEXTBOX  --
 ---------------
 
-function cl_PPlay.addtext( plist, typ, pos, size )
+function cl_PPlay.addtext( plist, desc, typ, pos, size )
 
 	local tentry
 	
 	if typ == "frame" then
+		local w, h = 0, 0
+		local posH = pos[2]
+
+		if desc != "" then
+			surface.SetFont( "Default" )
+			w, h = surface.GetTextSize( desc ) + 3
+
+			cl_PPlay.addlbl( plist, desc, "frame", pos[1], pos[2] )
+		end
+
+		if w >= (size[1] * 0.8) then
+
+			w = 0
+			posH = posH + h + 5
+
+		end
+
 		tentry = vgui.Create( "DTextEntry", plist )
-		tentry:SetPos( pos[1], pos[2] )
-		tentry:SetSize( size[1], size[2] )
+		tentry:SetPos( pos[1] + w, posH )
+		tentry:SetSize( size[1] - w, size[2] )
 
 		return tentry
 	else

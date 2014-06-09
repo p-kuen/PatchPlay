@@ -43,14 +43,23 @@ end
 
 function cl_PPlay.browse( list )
 
-	if table.Count(list.selected) == 0 and cl_PPlay.browser.currentBrowse.stage != 0 then return end
+	if list.directurl != nil and list.directurl:GetValue() != "" then
+		if list.mode == "server" then
+			cl_PPlay.sendToServer( list.directurl:GetValue(), "", "play" )
+		else
+			cl_PPlay.play( list.directurl:GetValue(), "", "private" )
+		end
+		return
+	end
+
+	if list.selected != nil and table.Count(list.selected) == 0 and cl_PPlay.browser.currentBrowse.stage != 0 then return end
 
 	if cl_PPlay.browser.currentBrowse.stage == 3 then
 
 		if list.mode == "server" then
-			cl_PPlay.sendToServer( blist.selected.streamurl, blist.selected.name, "play" )
+			cl_PPlay.sendToServer( list.selected.streamurl, list.selected.name, "play" )
 		else
-			cl_PPlay.play( blist.selected.streamurl, blist.selected.name, "private" )
+			cl_PPlay.play( list.selected.streamurl, list.selected.name, "private" )
 		end
 		return
 
@@ -61,7 +70,10 @@ function cl_PPlay.browse( list )
 	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage + 1
 
 	local rawURL = cl_PPlay.BrowseURL.dirble[cl_PPlay.browser.currentBrowse.stage]
-	local newURL = string.gsub( rawURL, "%[(%w+)%]", blist.selected )
+	local newURL = rawURL
+	if list.selected != nil then
+		newURL = string.gsub( rawURL, "%[(%w+)%]", list.selected )
+	end
 
 	cl_PPlay.browser.currentBrowse.url = "http://api.dirble.com/v1/" .. newURL .. "/format/json"
 
@@ -85,7 +97,7 @@ function cl_PPlay.browse( list )
 
 		end)
 
-		blist.selected = {}
+		list.selected = {}
 
 
 	end)
@@ -131,8 +143,8 @@ function cl_PPlay.search( txt )
 			if track.streamable then
 
 				local line = txt.target:AddLine( track.title )
-				line.title = track.title
-				line.uri = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
+				line.name = track.title
+				line.streamurl = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
 
 			end
 
@@ -144,45 +156,138 @@ end
 
 function cl_PPlay.searchplay( list )
 
-	if !list.selected.uri then return end
+	if list.directurl != nil and list.directurl != "" then
+
+		cl_PPlay.getJSONInfo( list.directurl:GetValue(), function(entry)
+			if list.mode == "private" then
+
+					if entry.kind == "track" then
+
+						cl_PPlay.playStream( entry.stream_url, entry.title, false )
+
+					elseif entry.kind == "playlist" then
+
+						cl_PPlay.fillPlaylist( entry.tracks, false )
+						cl_PPlay.playPlaylist( false )
+
+					end
+				
+			elseif list.mode == "server" then
+
+					if entry.kind == "track" then
+
+						cl_PPlay.playStream( entry.stream_url, entry.title, true )
+
+					elseif entry.kind == "playlist" then
+
+						cl_PPlay.fillPlaylist( entry.tracks, true )
+						timer.Simple(0.1, function()
+							cl_PPlay.playPlaylist( true )
+						end)
+
+					end
+
+			end
+		end)
+		return
+
+	end
+
+	if !list.selected.streamurl then return end
 
 	if list.mode == "server" then
-		cl_PPlay.sendToServer( list.selected.uri, list.selected.title, "play" )
+		cl_PPlay.sendToServer( list.selected.streamurl, list.selected.name, "play" )
 	else
-		cl_PPlay.play( list.selected.uri, list.selected.title, "private" )
+		cl_PPlay.play( list.selected.streamurl, list.selected.name, "private" )
 	end
 
 end
 
 function cl_PPlay.addtomy( list )
 
-	if list.type == "station" then
+	local stream = {}
 
-		if cl_PPlay.browser.currentBrowse.stage != 3 or table.Count(cl_PPlay.browser.currentBrowse.args) == 0 then return end
+	if list.directurl:GetValue() != "" then
 
-		if list.mode == "server" then
+		if list.type == "station" then
 
-			cl_PPlay.saveNewStream(cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, list.type, true)
+			local w, h = ScrW() / 6, ScrH() / 10
 
-		else
+			local frm = cl_PPlay.addfrm( w, h, "Save DirectURL", true)
+			local txt_name = cl_PPlay.addtext( frm, "Enter a name for the station:", "frame", { 15, 30 }, { w - 30, 18} )
 
-			cl_PPlay.saveNewStream( cl_PPlay.browser.currentBrowse.args.streamurl, cl_PPlay.browser.currentBrowse.args.name, list.type )
-			cl_PPlay.getStreamList()
+			cl_PPlay.addbtn( frm, "Save", function()
+
+				if list.mode == "server" then
+					cl_PPlay.saveNewStream( list.directurl:GetValue(), txt_name:GetValue(), list.type, true )
+				else
+					cl_PPlay.saveNewStream( list.directurl:GetValue(), txt_name:GetValue(), list.type )
+					cl_PPlay.getStreamList()
+				end
+
+				frm:Close()
+
+			end, "function", { w - 115, h - 35, 100, 20, list} )
+
+		elseif list.type == "track" then
+
+			cl_PPlay.getJSONInfo( list.directurl:GetValue(), function(entry)
+				if list.mode == "private" then
+
+					if entry.kind == "playlist" then
+
+						cl_PPlay.saveNewStream( list.directurl:GetValue() .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist" )
+
+					else
+
+						cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track" )
+
+					end
+
+						cl_PPlay.getStreamList()
+					
+				elseif list.mode == "server" then
+
+					if entry.kind == "playlist" then
+
+						cl_PPlay.saveNewStream( list.directurl:GetValue()  .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist", true )
+
+					else
+
+						cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track", true )
+
+					end
+
+				end
+
+				cl_PPlay.UpdateMenus()
+			end)
 
 		end
+
+		return
+	end
+
+	if list.type == "station" then
+
+		stream = cl_PPlay.browser.currentBrowse.args
+
+	elseif list.type == "track" then
+
+		stream = list.selected
+
+	end
+
+	if table.Count(stream) == 0 then return end
+
+	if list.mode == "server" then
+
+		cl_PPlay.saveNewStream(stream.streamurl, stream.name, list.type, true)
 
 	else
 
-		if list.mode == "server" then
-
-			cl_PPlay.saveNewStream(list.selected.uri, list.selected.title, list.type, true)
-
-		else
-
-			cl_PPlay.saveNewStream( list.selected.uri, list.selected.title, list.type )
-			cl_PPlay.getStreamList()
-
-		end
+		cl_PPlay.saveNewStream( stream.streamurl, stream.name, list.type )
+		cl_PPlay.getStreamList()
 
 	end
 

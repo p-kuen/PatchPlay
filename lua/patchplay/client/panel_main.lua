@@ -27,8 +27,6 @@ function cl_PPlay.AMenu( Panel )
 	cl_PPlay.addbtn( Panel, "Server Tracks", "openMy", "my", { "server", "tracks" } )
 	cl_PPlay.addbtn( Panel, "Server Playlists", "openMy", "my", { "server", "playlists" } )
 	cl_PPlay.addlbl( Panel, "", "panel" )
-	cl_PPlay.addbtn( Panel, "Open URL-Panel", "openCustom", nil, "server" )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "server" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", "openStationBrowser", nil, "server" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", "openSoundCloudBrowser", nil, "server" )
 
@@ -106,8 +104,6 @@ function cl_PPlay.UMenu( Panel )
 	cl_PPlay.addbtn( Panel, "My Tracks", "openMy", "my", { "private", "tracks" } )
 	cl_PPlay.addbtn( Panel, "My Playlists", "openMy", "my", { "private", "playlists" } )
 	cl_PPlay.addlbl( Panel, "", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Private URL-Panel", "openCustom", nil, "private" )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Panel", "openSoundCloud", nil, "private" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", "openStationBrowser", nil, "private" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", "openSoundCloudBrowser", nil, "private" )
 
@@ -118,10 +114,12 @@ function cl_PPlay.UMenu( Panel )
 	
 
 	-- Volume Slider
-	cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
+	
 	local sldr_vol
 
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then
+		cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
+		
 		sldr_vol = cl_PPlay.addsldr( Panel, cl_PPlay.station:GetVolume() * 100 )
 
 		sldr_vol.OnValueChanged = function( panel, value )

@@ -158,228 +158,6 @@ function cl_PPlay.openMy( ply, cmd, args )
 end
 concommand.Add( "pplay_openMy", cl_PPlay.openMy )
 
-
---CUSTOM FRAME
-function cl_PPlay.openCustom( ply, cmd, args )
-
-	local strings = {}
-
-	if args[1] == "private" then
-		strings = {
-			frametitle = "PatchPlay - Private URL Player"
-		}
-		
-	elseif args[1] == "server" then
-		strings = {
-			frametitle = "PatchPlay - URL Player"
-		}
-	end
-
-	local w, h = 400, 200
-
-	-- FRAME
-	local frm = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
-
-	-- LABEL IN FRAME
-	cl_PPlay.addlbl( frm, "Stream URL:", "frame", 15, 30 )
-
-	-- TEXTENTRY IN FRAME
-	local te_url = cl_PPlay.addtext( frm, "frame", { 15, 50 }, { w - 30, 22 } )
-
-	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Stream", nil, "frame", {w - 115, 82, 100, 20} )
-
-	-- PLAY BUTTON FUNCTION
-	function pbtn:OnMousePressed()
-
-		if te_url:GetValue() != "" and te_name != nil and te_name:GetValue() != "" then
-
-				if args[1] == "private" then
-
-					cl_PPlay.play( te_url:GetValue(), te_name:GetValue(), "private" )
-					
-				elseif args[1] == "server" then
-
-					cl_PPlay.sendToServer( te_url:GetValue(), te_Name:GetValue(), "play" )
-
-				end
-
-		elseif te_url:GetValue() != "" then
-
-				if args[1] == "private" then
-
-					cl_PPlay.play( te_url:GetValue(), "", "private" )
-					
-				elseif args[1] == "server" then
-
-					cl_PPlay.sendToServer( te_url:GetValue(), "", "play" )
-
-				end
-
-		end
-	end
-
-	-- STREAM LABEL
-	cl_PPlay.addlbl( frm, "If you want to save the stream to the streamlist, choose a name:", "frame", 15, 112 )
-
-	-- TEXTENTRY IN FRAME
-	local te_name = cl_PPlay.addtext( frm, "frame", { 15, 132 }, { w - 30, 22 } )
-
-	-- SAVE BUTTON IN FRAME
-	local sabtn = cl_PPlay.addbtn( frm, "Save", nil, "frame", {w - 115, h - 37, 100, 20} )
-
-	-- SAVE BUTTON FUNCTION
-	function sabtn:OnMousePressed()
-
-		if te_name:GetValue() != "" and  te_url:GetValue() != "" then
-
-			if args[1] == "private" then
-
-				cl_PPlay.saveNewStream( te_url:GetValue(), te_name:GetValue(), "station" )
-				cl_PPlay.getStreamList()
-				
-			elseif args[1] == "server" then
-
-				cl_PPlay.saveNewStream( te_url:GetValue(), te_name:GetValue(), "station", true)
-				
-			end
-
-			frm:Close()
-			cl_PPlay.UpdateMenus()
-
-		elseif te_url:GetValue() == "" then
-			cl_PPlay.showNotify( "Not saved! URL is empty!", "error", 5)
-		elseif te_name:GetValue() == "" then
-			cl_PPlay.showNotify( "Not saved! Name is empty!", "error", 5)
-		end
-		
-	end
-end
-concommand.Add( "pplay_openCustom", cl_PPlay.openCustom )
-
-
---SOUNDCLOUD FRAME
-function cl_PPlay.openSoundCloud( ply, cmd, args )
-
-	local strings = {}
-
-	if args[1] == "private" then
-		strings = {
-			frametitle = "PatchPlay - Private SoundCloud Player"
-		}
-		
-	elseif args[1] == "server" then
-		strings = {
-			frametitle = "PatchPlay - SoundCloud Player"
-		}
-	end
-
-	local w, h = 400, 130
-
-	-- FRAME
-	local frm = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
-
-	-- LABEL IN FRAME
-	cl_PPlay.addlbl( frm, "SoundCloud URL:", "frame", 15, 30 )
-
-	-- TEXTENTRY IN FRAME
-	local te_url = cl_PPlay.addtext( frm, "frame", { 15, 50 }, { w - 30, 22 } )
-
-	-- STREAM LABEL
-	cl_PPlay.addlbl( frm, "PatchPlay detects the title of the inserted stream!", "frame", 15, 75 )
-
-	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Stream", nil, "frame", {w - 115, 95, 100, 20} )
-
-	-- PLAY BUTTON FUNCTION
-	function pbtn:OnMousePressed()
-
-		cl_PPlay.getJSONInfo( te_url:GetValue(), function(entry)
-			if args[1] == "private" then
-
-					if entry.kind == "track" then
-
-						cl_PPlay.playStream( entry.stream_url, entry.title, false )
-
-					elseif entry.kind == "playlist" then
-
-						cl_PPlay.fillPlaylist( entry.tracks, false )
-						cl_PPlay.playPlaylist( false )
-
-					end
-				
-			elseif args[1] == "server" then
-
-					if entry.kind == "track" then
-
-						cl_PPlay.playStream( entry.stream_url, entry.title, true )
-
-					elseif entry.kind == "playlist" then
-
-						cl_PPlay.fillPlaylist( entry.tracks, true )
-						timer.Simple(0.1, function()
-							cl_PPlay.playPlaylist( true )
-						end)
-
-					end
-
-			end
-		end)
-		
-
-	end
-
-	-- SAVE BUTTON IN FRAME
-	local sabtn = cl_PPlay.addbtn( frm, "Save", nil, "frame", {w - 220, 95, 100, 20} )
-
-	-- SAVE BUTTON FUNCTION
-	function sabtn:OnMousePressed()
-
-		if te_url:GetValue() == "" then
-			cl_PPlay.showNotify( "Not saved! URL is empty!", "error", 5)
-			return
-		end
-
-		cl_PPlay.getJSONInfo( te_url:GetValue(), function(entry)
-			if args[1] == "private" then
-
-				if entry.kind == "playlist" then
-
-					cl_PPlay.saveNewStream( te_url:GetValue() .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist" )
-
-				else
-
-					cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track" )
-
-				end
-
-					cl_PPlay.getStreamList()
-				
-			elseif args[1] == "server" then
-
-				if entry.kind == "playlist" then
-
-					cl_PPlay.saveNewStream( te_url:GetValue()  .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist", true )
-
-				else
-
-					cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track", true )
-
-				end
-
-			end
-
-			cl_PPlay.showNotify( "Successfully saved!", "info", 5)
-
-			frm:Close()
-			cl_PPlay.UpdateMenus()
-		end)
-		
-	end
-
-end
-concommand.Add( "pplay_openSoundCloud", cl_PPlay.openSoundCloud )
-
 --PLAYLIST
 function cl_PPlay.openPlayList( ply, cmd, args )
 
@@ -481,6 +259,8 @@ function cl_PPlay.openStationBrowser( ply, cmd, args )
 
 	end
 
+	blist.directurl = cl_PPlay.addtext( frm, "OR enter a Station-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
+
 	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, blist} )
 	cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, "function", { 120, h - 35, 100, 20, blist} )
 	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, blist} )
@@ -508,8 +288,8 @@ function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
 
 	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
 
-	local txt_search = cl_PPlay.addtext( frm, "frame", { 15, 30 }, { w - 100, 20} )
-	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 100, {"Choose"} )
+	local txt_search = cl_PPlay.addtext( frm, "Search: ", "frame", { 15, 30 }, { w - 100, 20} )
+	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 130, {"Choose"} )
 
 	txt_search.target = blist
 	txt_search:RequestFocus()
@@ -529,6 +309,8 @@ function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
 		line:SetSelected( true )
 
 	end
+
+	blist.directurl = cl_PPlay.addtext( frm, "OR enter a SoundCloud-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
 
 	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30, 55, 20, txt_search} )
 	cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, "function", { w - 230, h - 35, 100, 20, blist} )
