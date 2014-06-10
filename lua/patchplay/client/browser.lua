@@ -130,11 +130,11 @@ function cl_PPlay.browseback( list )
 
 end
 
-function cl_PPlay.search( txt )
+function cl_PPlay.search( info )
 
 	local rawURL = "http://api.soundcloud.com/" .. cl_PPlay.BrowseURL.soundcloud.search
-	local newURL = string.gsub( rawURL, "%[(%w+)%]", string.lower(txt:GetValue()) )
-	newURL = string.gsub( newURL, "%s", "%%20" )
+	local newURL = string.gsub( rawURL, "%[(%w+)%]", string.lower(info.search.searchField:GetValue()) )
+	newURL = string.gsub( newURL, "%s", "%%20" ) --Replace spaces with the %20 character
 
 	cl_PPlay.getJSONInfo( newURL, function(entry)
 
@@ -142,7 +142,7 @@ function cl_PPlay.search( txt )
 
 			if track.streamable then
 
-				local line = txt.target:AddLine( track.title )
+				local line = info.search.target:AddLine( track.title )
 				line.name = track.title
 				line.streamurl = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
 

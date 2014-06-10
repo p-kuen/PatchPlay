@@ -1,17 +1,19 @@
-function cl_PPlay.openMy( ply, cmd, args )
+function cl_PPlay.openMy( args )
 
 	local strings = {}
 
+	local mode = args[1]
 	local kind = args[2]
+	
 	local singleKind = string.sub(kind, 0, -2)
 
-	if args[1] == "private" then
+	if mode == "private" then
 
 		strings = {
 			frametitle = "PatchPlay - My Private " .. kind:gsub("^%l", string.upper)
 		}
 		
-	elseif args[1] == "server" then
+	elseif mode == "server" then
 		strings = {
 			frametitle = "PatchPlay - Server " .. kind:gsub("^%l", string.upper)
 		}
@@ -33,7 +35,7 @@ function cl_PPlay.openMy( ply, cmd, args )
 		
 
 		tlv:Clear()
-		if args[1] == "private" then
+		if mode == "private" then
 
 			table.foreach( cl_PPlay.privateStreamList, function( key, value )
 
@@ -47,7 +49,7 @@ function cl_PPlay.openMy( ply, cmd, args )
 
 			end)
 			
-		elseif args[1] == "server" then
+		elseif mode == "server" then
 
 			table.foreach( cl_PPlay.streamList, function( key, value )
 
@@ -74,20 +76,20 @@ function cl_PPlay.openMy( ply, cmd, args )
 	end
 
 	-- DELETE BUTTON IN FRAME
-	local dbtn = cl_PPlay.addbtn( frm, "Delete", nil, "frame", {15, h - 40, 80, 25} )
+	local dbtn = cl_PPlay.addbtn( frm, "Delete", nil, "frame", { 15, h - 40 }, { 80, 25 } )
 
 	-- DELETE BUTTON FUNCTION
 	function dbtn:OnMousePressed()
 
 		if selectedLine != nil then
 
-			if args[1] == "private" then
+			if mode == "private" then
 
 				cl_PPlay.deleteStream( selectedLine.url )
 				cl_PPlay.getStreamList()
 				fillList()
 				
-			elseif args[1] == "server" then
+			elseif mode == "server" then
 
 				net.Start( "pplay_deletestream" )
 					net.WriteString( selectedLine.url )
@@ -101,14 +103,14 @@ function cl_PPlay.openMy( ply, cmd, args )
 	end
 
 	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Play", nil, "frame", {w - 115, h - 40, 100, 25} )
+	local pbtn = cl_PPlay.addbtn( frm, "Play", nil, "frame", { w - 115, h - 40 }, { 100, 25 } )
 
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
 
 		if selectedLine != nil then
 
-			if args[1] == "private" then
+			if mode == "private" then
 
 					if selectedLine.kind == "playlist" then
 
@@ -127,7 +129,7 @@ function cl_PPlay.openMy( ply, cmd, args )
 				
 					
 				
-			elseif args[1] == "server" then
+			elseif mode == "server" then
 
 				if selectedLine.kind == "playlist" then
 
@@ -156,7 +158,6 @@ function cl_PPlay.openMy( ply, cmd, args )
 	end
 
 end
-concommand.Add( "pplay_openMy", cl_PPlay.openMy )
 
 --PLAYLIST
 function cl_PPlay.openPlayList( ply, cmd, args )
@@ -214,6 +215,8 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 end
 concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
 
+--[[
+
 function cl_PPlay.openStationBrowser( ply, cmd, args )
 
 	local strings = {}
@@ -237,33 +240,27 @@ function cl_PPlay.openStationBrowser( ply, cmd, args )
 	local url = "primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/format/json"
 
 	local blist = cl_PPlay.addlv( frm, 5, 30, w - 10, h - 70, {"Choose"} )
-	blist.mode = args[1]
-	blist.type = "station"
+
+	local info
+	info.mode = args[1]
+	info.type = "station"
 
 	cl_PPlay.resetBrowse()
-	cl_PPlay.browse( blist )
+	cl_PPlay.browse( info )
 
 	function blist:OnClickLine( line, selected )
 
-		if cl_PPlay.browser.currentBrowse.stage != 3 then
-
-			blist.selected = { id = line.id }
-
-		else
-
-			blist.selected = { id = line.id, streamurl = line.url, name = line.name }
-
-		end
+		info.selectedLine = line
 		blist:ClearSelection()
 		line:SetSelected( true )
 
 	end
 
-	blist.directurl = cl_PPlay.addtext( frm, "OR enter a Station-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
+	info.directurl = cl_PPlay.addtext( frm, "OR enter a Station-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
 
-	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, blist} )
-	cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, "function", { 120, h - 35, 100, 20, blist} )
-	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, blist} )
+	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, info} )
+	cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, "function", { 120, h - 35, 100, 20, info} )
+	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, info} )
 
 end
 concommand.Add( "pplay_openStationBrowser", cl_PPlay.openStationBrowser)
@@ -298,24 +295,119 @@ function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
 		cl_PPlay.search( txt_search )
 		
 	end
+
+	local info
 	
-	blist.mode = args[1]
-	blist.type = "track"
+	info.mode = args[1]
+	info.type = "track"
 
 	function blist:OnClickLine( line, selected )
 
 		blist:ClearSelection()
-		blist.selected = line
+		info.selected = line
 		line:SetSelected( true )
 
 	end
 
 	blist.directurl = cl_PPlay.addtext( frm, "OR enter a SoundCloud-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
 
-	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30, 55, 20, txt_search} )
-	cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, "function", { w - 230, h - 35, 100, 20, blist} )
-	cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, "function", { w - 115, h - 35, 100, 20, blist} )
+	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30 }, { 55, 20 }, txt_search )
+	cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, "function", { w - 230, h - 35 }, { 100, 20 }, blist )
+	cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, "function", { w - 115, h - 35 }, { 100, 20 }, blist )
 
 end
 concommand.Add( "pplay_openSoundCloudBrowser", cl_PPlay.openSoundCloudBrowser)
+]]
+function cl_PPlay.openBrowser( args )
+
+	local info = {}
+	info.mode = args[1]
+	info.kind = args[2]
+
+	if info.kind == "soundcloud" then
+		info.type = "track"
+	else
+		info.type = "station"
+	end
+
+	local addition
+
+	if info.kind == "soundcloud" then
+		addition = "powered by SoundCloud API"
+	else
+		addition = "powered by Dirble API"
+	end
+
+	if info.mode == "private" then
+
+		strings = {
+			frametitle = "PatchPlay - Private " .. info.kind:gsub("^%l", string.upper) .. " Browser " .. addition
+		}
+		
+	elseif info.mode == "server" then
+		strings = {
+			frametitle = "PatchPlay - Server " .. info.kind:gsub("^%l", string.upper) .. " Browser " .. addition
+		}
+	end
+
+	local w = ScrW() / 4
+	local h = ScrH() / 3
+
+	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
+
+	--Browser
+	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 130, {"Choose"} )
+
+	info.directurl = cl_PPlay.addtext( frm, "OR enter a " .. info.kind:gsub("^%l", string.upper) .. "-URL here:", "frame", { 15, h - 60 }, { w - 30, 15 } )
+
+	local pbtn = nil
+	local addbtn = nil
+
+	function blist:OnClickLine( line, selected )
+
+		if pbtn != nil and pbtn:GetDisabled() then
+			pbtn:SetDisabled(false)
+		end
+
+		if addbtn != nil and addbtn:GetDisabled() then
+			addbtn:SetDisabled(false)
+		end
+
+		info.selectedLine = line
+		blist:ClearSelection()
+		line:SetSelected( true )
+
+	end
+
+	if info.kind == "soundcloud" then
+
+		local txt_search = cl_PPlay.addtext( frm, "Search: ", "frame", { 15, 30 }, { w - 100, 20} )
+		txt_search:RequestFocus()
+
+		info.search = {}
+		info.search.searchField = txt_search
+		info.search.target = blist
+
+		txt_search.OnEnter = function()
+
+			cl_PPlay.search( info )
+			
+		end
+
+		pbtn = cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, { w - 115, h - 35 }, { 100, 20 }, info )
+		pbtn:SetDisabled(true)
+		addbtn = cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, { w - 230, h - 35 }, { 100, 20 }, info )
+		addbtn:SetDisabled(true)
+		cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, { w - 70, 30 }, { 55, 20 }, info )
+		
+
+	else
+
+		cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, { 15, h - 35 }, { 100, 20 }, info )
+		cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, { 120, h - 35 }, { 100, 20 }, info )
+		cl_PPlay.addbtn( frm, "Browse/Play", cl_PPlay.browse, { w - 115, h - 35 }, { 100, 20 }, info )
+
+	end
+
+end
 

@@ -19,14 +19,7 @@ function cl_PPlay.addfrm( width, height, title, blur )
 
 	--cl_PPlay.addlbl( frm, title, "frametitle", 10, 5 )
 	-- Close Button
-	local cbtn = cl_PPlay.addbtn( frm, "X", nil, "frame", {w - 35, 5, 30, 15} )
-
-	-- SAVE BUTTON FUNCTION
-	function cbtn:OnMousePressed()
-
-		frm:Close()
-		
-	end
+	cl_PPlay.addbtn( frm, "X", function() frm:Close() end, { w - 35, 5 }, { 30, 15 } )
 
 	function frm:Paint()
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
@@ -131,20 +124,31 @@ end
 --   BUTTON   --
 ----------------
 
-function cl_PPlay.addbtn( plist, text, cmd, typ, args, ... )
+function cl_PPlay.addbtn( plist, text, cmd, ... )
 
 	local btn
-	if typ == "frame" or typ == "function"  then btn = vgui.Create( "DButton", plist ) else btn = vgui.Create( "DButton" ) end
+	local classname = plist:GetClassName()
 
+	if classname != "Panel" then
+
+		btn = vgui.Create( "DButton", plist )		
+		btn:SetDark( false )
+
+	else
+
+		btn = vgui.Create( "DButton" )
+		btn:SetDark( true )
+
+	end
+	btn.vararg = {...}
 	btn:Center()
 	btn:SetText( text )
 
-	if typ == "frame" or typ == "function" then
-		btn:SetPos( args[1], args[2] )
-		btn:SetSize( args[3], args[4] )
-		btn:SetDark( false )
-	else
-		btn:SetDark( true )
+	if classname != "Panel" then
+		btn:SetPos( btn.vararg[1][1], btn.vararg[1][2] )
+		btn:SetSize( btn.vararg[2][1], btn.vararg[2][2] )
+		table.remove( btn.vararg, 1 )
+		table.remove( btn.vararg, 2 )
 	end
 
 	local col =  Color( 200, 200, 200, 255 )
@@ -153,33 +157,36 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args, ... )
 		col =  Color( 255, 106, 106, 200 )
 	end
 
+	local oldcol = col
+
 	function btn:Paint()
+		if btn:GetDisabled() then col = Color( 230, 230, 230, 150 ) else col = oldcol end
 		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), col)
 	end
 
-	if typ != "frame" and typ != "function" then
+	if classname == "Panel" then
 		plist:AddItem( btn )
-	elseif typ != "function" then
-		return btn
 	end
-
-	local vararg = {...}
 
 	btn.DoClick = function()
 
+		if cmd == nil or btn:GetDisabled() then return end
+
 		if type(cmd) == "function" then
 
-			cmd(args[5], vararg)
+			PrintTable(btn.vararg)
+
+			if #btn.vararg == 1 then
+				btn.vararg = btn.vararg[1]
+			end
+
+			cmd(btn.vararg)
 
 		elseif type(cmd) == "string" then
 
 			if cmd == "" then return end
 
-			if typ == "my" then
-				RunConsoleCommand( "pplay_" .. cmd, args[1], args[2] )
-			else
-				RunConsoleCommand( "pplay_" .. cmd, args )
-			end
+			RunConsoleCommand( "pplay_" .. cmd, args )
 
 		else
 
@@ -187,11 +194,11 @@ function cl_PPlay.addbtn( plist, text, cmd, typ, args, ... )
 
 		end
 
-		
-
 		cl_PPlay.UpdateMenus()
 
 	end
+
+	return btn
 
 end
 
