@@ -16,7 +16,8 @@ cl_PPlay.BrowseURL = {
 
 	"primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble,
 	"childCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/primaryid/[id]",
-	"stations/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]"
+	"stations/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]",
+	"station/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]"
 
 	},
 
@@ -28,77 +29,66 @@ cl_PPlay.BrowseURL = {
 
 }
 
-function cl_PPlay.resetBrowse()
+function cl_PPlay.browse( info, back )
 
-	cl_PPlay.browser.currentBrowse = {
+	local serverbool = false
+	if info.mode == "server" then serverbool = true end
+	if back == nil then back = false end
 
-		url = "",
-		stage = 0,
-		args = {}
-	}
+	if !back and info.directurl != nil and info.directurl:GetValue() != "" then
 
-	cl_PPlay.browser.history = {}
-
-end
-
-function cl_PPlay.browse( list )
-
-	if list.directurl != nil and list.directurl:GetValue() != "" then
-		if list.mode == "server" then
-			cl_PPlay.sendToServer( list.directurl:GetValue(), "", "play" )
-		else
-			cl_PPlay.play( list.directurl:GetValue(), "", "private" )
-		end
-		return
-	end
-
-	if list.selected != nil and table.Count(list.selected) == 0 and cl_PPlay.browser.currentBrowse.stage != 0 then return end
-
-	if cl_PPlay.browser.currentBrowse.stage == 3 then
-
-		if list.mode == "server" then
-			cl_PPlay.sendToServer( list.selected.streamurl, list.selected.name, "play" )
-		else
-			cl_PPlay.play( list.selected.streamurl, list.selected.name, "private" )
-		end
+		cl_PPlay.playStream( info.directurl:GetValue(), "", serverbool )
 		return
 
 	end
 
-	cl_PPlay.browser.currentBrowse.url = ""
+	info.browse.url = ""
 
-	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage + 1
+	if info.browse.stage == nil then info.browse.stage = 0 end
 
-	local rawURL = cl_PPlay.BrowseURL.dirble[cl_PPlay.browser.currentBrowse.stage]
-	local newURL = rawURL
-	if list.selected != nil then
-		newURL = string.gsub( rawURL, "%[(%w+)%]", list.selected )
+	local add = 0
+	if back and info.browse.stage > 1 then add = -1 elseif !back and info.browse.stage < table.Count( cl_PPlay.BrowseURL.dirble) then add = 1 end
+	info.browse.stage = info.browse.stage + add
+
+	if back then
+
+		info.browse.url = info.browse.history[info.browse.stage] -- Load url from the history
+
+	else
+
+		info.browse.url = cl_PPlay.BrowseURL.dirble[info.browse.stage]
+		if string.find( info.browse.url, "%[(%w+)%]" ) then
+
+			info.browse.url = string.gsub( info.browse.url, "%[(%w+)%]", info.selectedLine.id )
+
+		end
+
+		info.browse.url = "http://api.dirble.com/v1/" .. info.browse.url .. "/format/json"
+
+		info.browse.history[info.browse.stage] = info.browse.url
+
 	end
 
-	cl_PPlay.browser.currentBrowse.url = "http://api.dirble.com/v1/" .. newURL .. "/format/json"
+	cl_PPlay.getJSONInfo( info.browse.url, function(entry)
 
-	table.insert( cl_PPlay.browser.history, cl_PPlay.browser.currentBrowse.url )
+		if !back and info.browse.stage == table.Count( cl_PPlay.BrowseURL.dirble ) then
 
-	cl_PPlay.getJSONInfo( cl_PPlay.browser.currentBrowse.url, function(entry)
+			cl_PPlay.playStream( entry.streamurl, entry.name, serverbool )
+			return
+		
+		end
 
-		list:Clear()
+		info.browse.target:Clear()
 
 		table.foreach(entry, function( key, value )
 
-			if cl_PPlay.browser.currentBrowse.stage == 3 and !cl_PPlay.checkValidURL( value.streamurl ) or value.status == 0 then return end
-			
+			local line = info.browse.target:AddLine( value.name )
 
-			local line = list:AddLine( value.name )
-			if cl_PPlay.browser.currentBrowse.stage == 3 then
-				line.url = value.streamurl
-				line.name = value.name
-			end
 			line.id = value.id
 
 		end)
 
-		list.selected = {}
-
+		info.selectedLine = nil
 
 	end)
 
@@ -106,27 +96,9 @@ function cl_PPlay.browse( list )
 
 end
 
-function cl_PPlay.browseback( list )
+function cl_PPlay.browseBack( info )
 
-	if #cl_PPlay.browser.history == 0 then return end
-
-	cl_PPlay.browser.currentBrowse.url = cl_PPlay.browser.history[#cl_PPlay.browser.history - 1]
-
-	cl_PPlay.getJSONInfo( cl_PPlay.browser.currentBrowse.url, function(entry)
-
-		list:Clear()
-
-		table.foreach(entry, function( key, value )
-
-			local line = list:AddLine( value.name )
-			line.id = value.id
-
-		end)
-
-	end)
-
-	table.remove( cl_PPlay.browser.history, #cl_PPlay.browser.history )
-	cl_PPlay.browser.currentBrowse.stage = cl_PPlay.browser.currentBrowse.stage - 1
+	cl_PPlay.browse( info, true )
 
 end
 
@@ -136,7 +108,10 @@ function cl_PPlay.search( info )
 	local newURL = string.gsub( rawURL, "%[(%w+)%]", string.lower(info.search.searchField:GetValue()) )
 	newURL = string.gsub( newURL, "%s", "%%20" ) --Replace spaces with the %20 character
 
+	local fails = 0
 	cl_PPlay.getJSONInfo( newURL, function(entry)
+
+		info.search.target:Clear()
 
 		table.foreach(entry, function(key, track)
 
@@ -146,6 +121,11 @@ function cl_PPlay.search( info )
 				line.name = track.title
 				line.streamurl = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
 
+			else
+
+				fails = fails + 1
+				if info.fails != nil then info.fails:SetText("Tracks, which cannot be played: " .. fails) end
+
 			end
 
 		end)
@@ -154,12 +134,12 @@ function cl_PPlay.search( info )
 
 end
 
-function cl_PPlay.searchplay( list )
+function cl_PPlay.searchplay( info )
 
-	if list.directurl != nil and list.directurl != "" then
+	if info.directurl != nil and info.directurl:GetValue() != "" then
 
-		cl_PPlay.getJSONInfo( list.directurl:GetValue(), function(entry)
-			if list.mode == "private" then
+		cl_PPlay.getJSONInfo( info.directurl:GetValue(), function(entry)
+			if info.mode == "private" then
 
 					if entry.kind == "track" then
 
@@ -172,7 +152,7 @@ function cl_PPlay.searchplay( list )
 
 					end
 				
-			elseif list.mode == "server" then
+			elseif info.mode == "server" then
 
 					if entry.kind == "track" then
 
@@ -193,13 +173,12 @@ function cl_PPlay.searchplay( list )
 
 	end
 
-	if !list.selected.streamurl then return end
+	if info.selectedLine.streamurl == nil or info.selectedLine.name == nil then return end
 
-	if list.mode == "server" then
-		cl_PPlay.sendToServer( list.selected.streamurl, list.selected.name, "play" )
-	else
-		cl_PPlay.play( list.selected.streamurl, list.selected.name, "private" )
-	end
+	local serverbool = false
+	if info.mode == "server" then serverbool = true end
+
+	cl_PPlay.playStream( info.selectedLine.streamurl, info.selectedLine.name, serverbool )
 
 end
 

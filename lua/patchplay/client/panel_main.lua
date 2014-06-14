@@ -27,8 +27,8 @@ function cl_PPlay.AMenu( Panel )
 	cl_PPlay.addbtn( Panel, "Server Tracks", cl_PPlay.openMy, "panel", { "server", "tracks" } )
 	cl_PPlay.addbtn( Panel, "Server Playlists", cl_PPlay.openMy, "panel", { "server", "playlists" } )
 	cl_PPlay.addlbl( Panel, "", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Station Browser", "openStationBrowser", nil, "server" )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", "openSoundCloudBrowser", nil, "server" )
+	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, { "server", "station" } )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, { "server", "soundcloud" } )
 
 	if cl_PPlay.currentStream != nil and cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
 

@@ -63,7 +63,7 @@ function cl_PPlay.getJSONInfo( rawURL, cb )
 
 			if urlType == "SoundCloud" then
 			
-				if !entry.streamable or entry.original_format == "wav" then
+				if !entry.streamable --[[or entry.original_format == "wav"]] then
 					cl_PPlay.showNotify( "SoundCloud URL not streamable", "error", 10)
 					cl_PPlay.showLoading = false
 					return

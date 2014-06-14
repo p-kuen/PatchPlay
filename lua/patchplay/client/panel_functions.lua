@@ -9,7 +9,7 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	local h = height
 	frm:SetPos( surface.ScreenWidth() / 2 - ( w / 2 ), surface.ScreenHeight() / 2 - ( h / 2 ) )
 	frm:SetSize( w, h )
-	frm:SetTitle( title )
+	frm:SetTitle( "" )
 	frm:SetVisible( true )
 	frm:SetDraggable( true )
 	frm:SetSizable( false )
@@ -17,9 +17,9 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	frm:SetBackgroundBlur( blur )
 	frm:MakePopup()
 
-	--cl_PPlay.addlbl( frm, title, "frametitle", 10, 5 )
+	cl_PPlay.addlbl( frm, title, "frametitle", 5, 5.5 )
 	-- Close Button
-	cl_PPlay.addbtn( frm, "X", function() frm:Close() end, { w - 35, 5 }, { 30, 15 } )
+	cl_PPlay.addbtn( frm, "X", function() frm:Close() end, { w - 45, 0 }, { 40, 18 } )
 
 	function frm:Paint()
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
@@ -89,12 +89,14 @@ function cl_PPlay.addlbl( plist, text, typ, x, y )
 		lbl:SizeToContents()
 		lbl:SetDark( true )
 
+		return lbl
+
 	elseif typ == "frametitle" then
 
 		surface.CreateFont( "TitleFont", {
 			font = "Roboto",
-			size = 20,
-			weight = 500,
+			size = 14,
+			weight = 300,
 			blursize = 0,
 			scanlines = 0,
 			antialias = true,
@@ -140,6 +142,7 @@ function cl_PPlay.addbtn( plist, text, cmd, ... )
 		btn:SetDark( true )
 
 	end
+
 	btn.vararg = {...}
 	btn:Center()
 	btn:SetText( text )
@@ -148,13 +151,14 @@ function cl_PPlay.addbtn( plist, text, cmd, ... )
 		btn:SetPos( btn.vararg[1][1], btn.vararg[1][2] )
 		btn:SetSize( btn.vararg[2][1], btn.vararg[2][2] )
 		table.remove( btn.vararg, 1 )
-		table.remove( btn.vararg, 2 )
+		table.remove( btn.vararg, 1 )
 	end
 
 	local col =  Color( 200, 200, 200, 255 )
 
-	if string.find(text, "Stop") != nil or string.find(text, "Delete") != nil then
+	if string.find(text, "Stop") or string.find(text, "Delete") or string.find(text, "X") then
 		col =  Color( 255, 106, 106, 200 )
+		btn:SetTextColor( Color( 255,255,255,255 ) )
 	end
 
 	local oldcol = col
@@ -174,13 +178,13 @@ function cl_PPlay.addbtn( plist, text, cmd, ... )
 
 		if type(cmd) == "function" then
 
-			PrintTable(btn.vararg)
+			local args = {}
 
 			if #btn.vararg == 1 then
-				btn.vararg = btn.vararg[1]
-			end
+				args = btn.vararg[1]
+			end	
 
-			cmd(btn.vararg)
+			cmd(args)
 
 		elseif type(cmd) == "string" then
 
@@ -283,6 +287,23 @@ function cl_PPlay.addsldr( plist, value )
 
 end
 
+surface.CreateFont( "Little", {
+	font = "Roboto",
+	size = 16,
+	weight = 300,
+	blursize = 0,
+	scanlines = 0,
+	antialias = true,
+	underline = false,
+	italic = false,
+	strikeout = false,
+	symbol = false,
+	rotary = false,
+	shadow = false,
+	additive = false,
+	outline = false,
+} )
+
 ----------------
 --  LISTVIEW  --
 ----------------
@@ -294,13 +315,44 @@ function cl_PPlay.addlv( plist, x, y, w, h, cols )
 	lv:SetPos( x, y )
 	lv:SetSize( w, h )
 	lv:SetMultiSelect( false )
+
+	if #cols == 1 then
+		lv:SetHideHeaders( true )
+	end
 	
 	table.foreach( cols, function( key, value )
 		lv:AddColumn( value )
 	end )
 
+	function lv.VBar:Paint()
+
+		draw.RoundedBox( 0, 0, 0, 20, lv.VBar:GetTall(), Color( 240, 240, 240, 255 ) )
+
+	end
+
+	function lv.VBar.btnGrip:Paint()
+
+		draw.RoundedBox( 0, 0, 0, 20, lv.VBar.btnGrip:GetTall(), Color( 200, 200, 200, 255 ) )
+
+	end
+
+	function lv.VBar.btnUp:Paint()
+
+		draw.RoundedBox( 0, 0, 0, 20, 20, Color( 220, 220, 220, 255 ) )
+		draw.SimpleText( "-", "Little", 8, 7, Color( 40, 40, 40, 255), 1, 1 )
+
+	end
+
+	function lv.VBar.btnDown:Paint()
+
+		draw.RoundedBox( 0, 0, 0, 20, 20, Color( 220, 220, 220, 255 ) )
+		draw.SimpleText( "-", "Little", 8, 7, Color( 40, 40, 40, 255), 1, 1 )
+
+	end
+
 	function lv:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, 0, w, h, Color( 220, 220, 220, 255 ) )
+		draw.RoundedBox( 0, 1, 1, w - 2, h - 2, Color( 255, 255, 255, 255 ) )
 		--draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255, 255 ) )
 	end
 	

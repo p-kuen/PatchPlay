@@ -76,7 +76,7 @@ function cl_PPlay.openMy( args )
 	end
 
 	-- DELETE BUTTON IN FRAME
-	local dbtn = cl_PPlay.addbtn( frm, "Delete", nil, "frame", { 15, h - 40 }, { 80, 25 } )
+	local dbtn = cl_PPlay.addbtn( frm, "Delete", nil, { 15, h - 40 }, { 80, 25 } )
 
 	-- DELETE BUTTON FUNCTION
 	function dbtn:OnMousePressed()
@@ -103,7 +103,7 @@ function cl_PPlay.openMy( args )
 	end
 
 	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Play", nil, "frame", { w - 115, h - 40 }, { 100, 25 } )
+	local pbtn = cl_PPlay.addbtn( frm, "Play", nil, { w - 115, h - 40 }, { 100, 25 } )
 
 	-- PLAY BUTTON FUNCTION
 	function pbtn:OnMousePressed()
@@ -215,126 +215,46 @@ function cl_PPlay.openPlayList( ply, cmd, args )
 end
 concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
 
---[[
+local function enableIfDisabled( button, bool )
 
-function cl_PPlay.openStationBrowser( ply, cmd, args )
+	if bool == nil then bool = true end
 
-	local strings = {}
-
-	if args[1] == "private" then
-		strings = {
-			frametitle = "PatchPlay - Private Station Browser powered by Dirble API"
-		}
-		
-	elseif args[1] == "server" then
-		strings = {
-			frametitle = "PatchPlay - Server Station Browser powered by Dirble API"
-		}
+	if button != nil and button:GetDisabled() and bool then
+		button:SetDisabled(false)
+		return true
+	elseif button == nil then
+		return false
 	end
-
-	local w = ScrW() / 4
-	local h = ScrH() / 3
-
-	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
-
-	local url = "primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/format/json"
-
-	local blist = cl_PPlay.addlv( frm, 5, 30, w - 10, h - 70, {"Choose"} )
-
-	local info
-	info.mode = args[1]
-	info.type = "station"
-
-	cl_PPlay.resetBrowse()
-	cl_PPlay.browse( info )
-
-	function blist:OnClickLine( line, selected )
-
-		info.selectedLine = line
-		blist:ClearSelection()
-		line:SetSelected( true )
-
-	end
-
-	info.directurl = cl_PPlay.addtext( frm, "OR enter a Station-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
-
-	cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, "function", { 15, h - 35, 100, 20, info} )
-	cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, "function", { 120, h - 35, 100, 20, info} )
-	cl_PPlay.addbtn( frm, "Browse", cl_PPlay.browse, "function", { w - 115, h - 35, 100, 20, info} )
 
 end
-concommand.Add( "pplay_openStationBrowser", cl_PPlay.openStationBrowser)
 
-function cl_PPlay.openSoundCloudBrowser( ply, cmd, args )
+local function disableIfEnabled( button, bool )
 
-	local strings = {}
+	if bool == nil then bool = true end
 
-	if args[1] == "private" then
-		strings = {
-			frametitle = "PatchPlay - Private SoundCloud Browser powered by SoundCloud API"
-		}
-		
-	elseif args[1] == "server" then
-		strings = {
-			frametitle = "PatchPlay - Server SoundCloud Browser powered by SoundCloud API"
-		}
+	if button != nil and !button:GetDisabled() and bool then
+		button:SetDisabled(true)
+		return true
+	elseif button == nil then
+		return false
 	end
-
-	local w = ScrW() / 4
-	local h = ScrH() / 3
-
-	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
-
-	local txt_search = cl_PPlay.addtext( frm, "Search: ", "frame", { 15, 30 }, { w - 100, 20} )
-	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 130, {"Choose"} )
-
-	txt_search.target = blist
-	txt_search:RequestFocus()
-	txt_search.OnEnter = function()
-
-		cl_PPlay.search( txt_search )
-		
-	end
-
-	local info
-	
-	info.mode = args[1]
-	info.type = "track"
-
-	function blist:OnClickLine( line, selected )
-
-		blist:ClearSelection()
-		info.selected = line
-		line:SetSelected( true )
-
-	end
-
-	blist.directurl = cl_PPlay.addtext( frm, "OR enter a SoundCloud-URL here:", "frame", { 15, h - 60 }, { w - 30, 15} )
-
-	cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, "function", { w - 70, 30 }, { 55, 20 }, txt_search )
-	cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, "function", { w - 230, h - 35 }, { 100, 20 }, blist )
-	cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, "function", { w - 115, h - 35 }, { 100, 20 }, blist )
 
 end
-concommand.Add( "pplay_openSoundCloudBrowser", cl_PPlay.openSoundCloudBrowser)
-]]
+
 function cl_PPlay.openBrowser( args )
 
 	local info = {}
 	info.mode = args[1]
 	info.kind = args[2]
 
+	local addition
+	local offsetY = 0
 	if info.kind == "soundcloud" then
 		info.type = "track"
+		addition = "powered by SoundCloud API"
+		offsetY = 30
 	else
 		info.type = "station"
-	end
-
-	local addition
-
-	if info.kind == "soundcloud" then
-		addition = "powered by SoundCloud API"
-	else
 		addition = "powered by Dirble API"
 	end
 
@@ -356,7 +276,7 @@ function cl_PPlay.openBrowser( args )
 	local frm = cl_PPlay.addfrm(w, h, strings.frametitle, true)
 
 	--Browser
-	local blist = cl_PPlay.addlv( frm, 5, 55, w - 10, h - 130, {"Choose"} )
+	local blist = cl_PPlay.addlv( frm, 5, 25 + offsetY, w - 10, h - 140 + 30 - offsetY, {"Choose"} )
 
 	info.directurl = cl_PPlay.addtext( frm, "OR enter a " .. info.kind:gsub("^%l", string.upper) .. "-URL here:", "frame", { 15, h - 60 }, { w - 30, 15 } )
 
@@ -365,12 +285,9 @@ function cl_PPlay.openBrowser( args )
 
 	function blist:OnClickLine( line, selected )
 
-		if pbtn != nil and pbtn:GetDisabled() then
-			pbtn:SetDisabled(false)
-		end
-
-		if addbtn != nil and addbtn:GetDisabled() then
-			addbtn:SetDisabled(false)
+		enableIfDisabled( pbtn )
+		if info.kind == "soundcloud" or info.kind == "station" and info.browse.stage == table.Count(cl_PPlay.BrowseURL.dirble) - 1 then
+			enableIfDisabled( addbtn )
 		end
 
 		info.selectedLine = line
@@ -394,19 +311,55 @@ function cl_PPlay.openBrowser( args )
 			
 		end
 
+		txt_search.OnTextChanged = function()
+
+			enableIfDisabled( srcbtn, txt_search:GetValue() != "" )
+			disableIfEnabled( srcbtn, txt_search:GetValue() == "" )
+
+		end
+
+		info.fails = cl_PPlay.addlbl( frm, "", "frame", 15, h - 90 )
+
 		pbtn = cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, { w - 115, h - 35 }, { 100, 20 }, info )
 		pbtn:SetDisabled(true)
+
 		addbtn = cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, { w - 230, h - 35 }, { 100, 20 }, info )
 		addbtn:SetDisabled(true)
-		cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, { w - 70, 30 }, { 55, 20 }, info )
+
+		srcbtn = cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, { w - 70, 30 }, { 55, 20 }, info )
+		srcbtn:SetDisabled(true)
 		
 
 	else
 
-		cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseback, { 15, h - 35 }, { 100, 20 }, info )
-		cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, { 120, h - 35 }, { 100, 20 }, info )
+		info.browse = {}
+		info.browse.history = {}
+		info.browse.target = blist
+
+		cl_PPlay.browse( info )
+
+		cl_PPlay.addbtn( frm, "Back", cl_PPlay.browseBack, { 15, h - 35 }, { 100, 20 }, info )
+
+		addbtn = cl_PPlay.addbtn( frm, "Add to My Stations", cl_PPlay.addtomy, { 120, h - 35 }, { 100, 20 }, info )
+		addbtn:SetDisabled(true)
+
 		cl_PPlay.addbtn( frm, "Browse/Play", cl_PPlay.browse, { w - 115, h - 35 }, { 100, 20 }, info )
 
+	end
+
+	info.directurl.OnTextChanged = function()
+
+		enableIfDisabled( pbtn, info.directurl:GetValue() != "" )
+		enableIfDisabled( addbtn, info.directurl:GetValue() != "" )
+		disableIfEnabled( pbtn, info.directurl:GetValue() == "" )
+		disableIfEnabled( addbtn, info.directurl:GetValue() == "")
+
+	end
+
+	info.directurl.OnEnter = function()
+
+		if info.kind == "soundcloud" then cl_PPlay.search( info ) else cl_PPlay.browse( info ) end
+			
 	end
 
 end

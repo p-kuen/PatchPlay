@@ -34,7 +34,7 @@ function cl_PPlay.play( url, name, mode, args )
 	if mode == "server" and cl_PPlay.currentStream[ "stream_type" ] == "private" and args["switch"] == nil or !cl_PPlay.use then return end
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:Stop() end
 
-	sound.PlayURL( url, "play noblock", function( station )
+	sound.PlayURL( url, "play noblock", function( station, errorID, errorName )
 
 		if station != nil and station:IsValid() then
 
@@ -87,7 +87,7 @@ function cl_PPlay.play( url, name, mode, args )
 			cl_PPlay.showLoading = false
 		else
 			print("url: " .. url .. " was invalid")
-			cl_PPlay.showNotify( "INVALID URL!", "error", 10 )
+			cl_PPlay.showNotify( "Error: ID " .. errorID .. " - " .. errorName , "error", 10 )
 			cl_PPlay.serverStream[ "playing" ] = false
 			cl_PPlay.showLoading = false
 		end
@@ -133,19 +133,19 @@ function cl_PPlay.playStream( url, name, server, args )
 
 	if server == nil then server = false end
 
-	if url != "" and url != nil then
+	if url != nil and url != "" then
 
-		local fullStream = url .. "?client_id=92373aa73cab62ccf53121163bb1246e"
+		local fullStream = url
 
-		if name != "" then
+		if string.find(url, "soundcloud") then
 
-			if server then cl_PPlay.sendToServer( fullStream, name, "play", args ) else cl_PPlay.play( fullStream, name, "private", args ) end
-		
-		else
-			
-			if server then cl_PPlay.sendToServer( fullStream, "", "play", args ) else cl_PPlay.play( fullStream, "", "private" ) end
-		
+			if !string.find(url, "?client_id") then
+				fullStream = url .. "?client_id=92373aa73cab62ccf53121163bb1246e"
+			end
+
 		end
+
+		if server then cl_PPlay.sendToServer( fullStream, name, "play", args ) else cl_PPlay.play( fullStream, name, "private", args ) end
 
 	end
 
