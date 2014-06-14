@@ -23,7 +23,8 @@ function cl_PPlay.saveNewStream( url, name, kind, server )
 	else
 
 		sql.Query( "INSERT INTO pplay_privatestreamlist( 'name', 'stream', 'kind' ) VALUES( '" .. name .. "', '" .. url .. "', '".. kind .."')" )
-
+		cl_PPlay.getStreamList()
+		
 	end
 
 	cl_PPlay.showNotify( "Successfully saved!", "info", 5)

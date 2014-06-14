@@ -182,91 +182,59 @@ function cl_PPlay.searchplay( info )
 
 end
 
-function cl_PPlay.addtomy( list )
+function cl_PPlay.addtomy( info )
 
-	local stream = {}
+	local serverbool = false
+	if info.mode == "server" then serverbool = true end
 
-	if list.directurl:GetValue() != "" then
+	if info.directurl != nil and info.directurl:GetValue() != "" then
 
-		if list.type == "station" then
+		if info.kind == "soundcloud" then
+
+			cl_PPlay.getJSONInfo( info.directurl:GetValue(), function(entry)
+
+				cl_PPlay.saveNewStream( entry.stream_url, entry.title, "tracks", serverbool )
+
+			end)
+
+		else
 
 			local w, h = ScrW() / 6, ScrH() / 10
 
-			local frm = cl_PPlay.addfrm( w, h, "Save DirectURL", true)
+			local frm = cl_PPlay.addfrm( w, h, "Save A Station", true)
 			local txt_name = cl_PPlay.addtext( frm, "Enter a name for the station:", "frame", { 15, 30 }, { w - 30, 18} )
+			
 
 			cl_PPlay.addbtn( frm, "Save", function()
 
-				if list.mode == "server" then
-					cl_PPlay.saveNewStream( list.directurl:GetValue(), txt_name:GetValue(), list.type, true )
-				else
-					cl_PPlay.saveNewStream( list.directurl:GetValue(), txt_name:GetValue(), list.type )
-					cl_PPlay.getStreamList()
-				end
+				cl_PPlay.saveNewStream( info.directurl:GetValue(), txt_name:GetValue(), "stations", serverbool )
 
 				frm:Close()
 
-			end, "function", { w - 115, h - 35, 100, 20, list} )
-
-		elseif list.type == "track" then
-
-			cl_PPlay.getJSONInfo( list.directurl:GetValue(), function(entry)
-				if list.mode == "private" then
-
-					if entry.kind == "playlist" then
-
-						cl_PPlay.saveNewStream( list.directurl:GetValue() .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist" )
-
-					else
-
-						cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track" )
-
-					end
-
-						cl_PPlay.getStreamList()
-					
-				elseif list.mode == "server" then
-
-					if entry.kind == "playlist" then
-
-						cl_PPlay.saveNewStream( list.directurl:GetValue()  .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "playlist", true )
-
-					else
-
-						cl_PPlay.saveNewStream( entry.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud, entry.title, "track", true )
-
-					end
-
-				end
-
-				cl_PPlay.UpdateMenus()
-			end)
+			end, { w - 115, h - 35 }, { 100, 20 }, info )
 
 		end
 
 		return
-	end
-
-	if list.type == "station" then
-
-		stream = cl_PPlay.browser.currentBrowse.args
-
-	elseif list.type == "track" then
-
-		stream = list.selected
 
 	end
 
-	if table.Count(stream) == 0 then return end
+	if info.selectedLine == nil then return end
+	if info.kind == "soundcloud" then
 
-	if list.mode == "server" then
-
-		cl_PPlay.saveNewStream(stream.streamurl, stream.name, list.type, true)
+		cl_PPlay.saveNewStream( info.selectedLine.streamurl, info.selectedLine.name, "track", serverbool )
 
 	else
 
-		cl_PPlay.saveNewStream( stream.streamurl, stream.name, list.type )
-		cl_PPlay.getStreamList()
+		local stationURL = cl_PPlay.BrowseURL.dirble[table.Count(cl_PPlay.BrowseURL.dirble)]
+		stationURL = string.gsub( stationURL, "%[(%w+)%]", info.selectedLine.id )
+		stationURL = "http://api.dirble.com/v1/" .. stationURL .. "/format/json"
+
+		cl_PPlay.getJSONInfo( stationURL, function(entry)
+
+			cl_PPlay.saveNewStream( entry.streamurl, entry.name, "station", serverbool )
+
+		end)
 
 	end
 
