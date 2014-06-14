@@ -1,5 +1,5 @@
-"../../../bin/gmad.exe" create -out "D:\Benutzer\Patrick\Dateien\Workshop\PPlay.gma" -folder "D:\Benutzer\Patrick\Dateien\Server\Valve-Server\steamapps\common\GarrysModDS\garrysmod\addons\PatchPlay"
+"../../../bin/gmad.exe" create -out "D:\Daten\Workshop\PPlay.gma" -folder "D:\Daten\Server\Valve Server\steamapps\common\GarrysModDS\garrysmod\addons\PatchPlay"
 
-"../../../bin/gmpublish" update -addon "D:\Benutzer\Patrick\Dateien\Workshop\PPlay.gma" -id "250792180" -changes "stationbrowser"
+"../../../bin/gmpublish" update -addon "D:\Daten\Workshop\PPlay.gma" -id "250792180" -changes "UPDATE INFOS WILL SHOW UP HERE SOON"
 
 PAUSE
