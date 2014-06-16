@@ -75,11 +75,7 @@ function cl_PPlay.openMy( args )
 		line:SetSelected( true )
 	end
 
-	-- DELETE BUTTON IN FRAME
-	local dbtn = cl_PPlay.addbtn( frm, "Delete", nil, { 15, h - 40 }, { 80, 25 } )
-
-	-- DELETE BUTTON FUNCTION
-	function dbtn:OnMousePressed()
+	local function delete()
 
 		if selectedLine != nil then
 
@@ -99,14 +95,13 @@ function cl_PPlay.openMy( args )
 
 			end
 		end
-		
+
 	end
 
-	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Play", nil, { w - 115, h - 40 }, { 100, 25 } )
+	-- DELETE BUTTON IN FRAME
+	local dbtn = cl_PPlay.addbtn( frm, "Delete", delete, { 15, h - 40 }, { 80, 25 } )
 
-	-- PLAY BUTTON FUNCTION
-	function pbtn:OnMousePressed()
+	local function play()
 
 		if selectedLine != nil then
 
@@ -156,6 +151,9 @@ function cl_PPlay.openMy( args )
 		end
 
 	end
+
+	-- PLAY BUTTON IN FRAME
+	local pbtn = cl_PPlay.addbtn( frm, "Play", play, { w - 115, h - 40 }, { 100, 25 } )
 
 end
 

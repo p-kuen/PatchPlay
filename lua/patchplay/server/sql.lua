@@ -81,10 +81,10 @@ function sv_PPlay.loadStreamSettings()
 
 		sql.Query( "CREATE TABLE IF NOT EXISTS pplay_streamlist('name' TEXT, 'stream' TEXT, 'kind' TEXT);" )
 
-		sv_PPlay.saveNewStream( { name = "Rock - 181.fm - Rock 181 (Active Rock)", url = "http://dir.xiph.org/listen/674163/listen.m3u", mode = "station" } )
-		sv_PPlay.saveNewStream( { name = "Dubstep - R1 Dubstep", url = "http://dir-xiph.osuosl.org/listen/364996/listen.m3u", mode = "station" } )
-		sv_PPlay.saveNewStream( { name = "Dance - Fusion Radio", url = "http://dir-xiph.osuosl.org/listen/349400/listen.m3u", mode = "station" } )
-		sv_PPlay.saveNewStream( { name = "House - ClubbingStation", url = "http://dir-xiph.osuosl.org/listen/573471/listen.m3u", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "Rock - Champion Radio Uk - Juke Box - Hits From All Eras.", url = "http://uk3.internet-radio.com:11131/listen.pls", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "Dubstep - www.radio-tube.pl - Dubstep 247", url = "http://s4.radiohost.pl:8154/listen.pls", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "Dance - Real Dance Radio", url = "http://uk3.internet-radio.com:10138/listen.pls", mode = "station" } )
+		sv_PPlay.saveNewStream( { name = "House - Radioseven - www.radioseven.se", url = "http://188.65.152.205:8500/listen.pls", mode = "station" } )
 		
 		MsgC(
 			Color(255, 150, 0),
@@ -96,8 +96,9 @@ function sv_PPlay.loadStreamSettings()
 	if sql.TableExists( "pplay_streamlist" ) then
 
 		local existingstreamlist = sql.Query( "PRAGMA table_info(pplay_streamlist);" )
+		local tbl = sql.Query("SELECT * FROM pplay_streamlist")
 
-		if existingstreamlist[3] == nil then
+		if existingstreamlist[3] == nil or tbl[3].name != "Dance - Real Dance Radio" then
 			MsgC(
 				Color(255, 0, 0),
 				"[PatchPlay] The Streamlist-structure got updated, so we have to delete the Streamlist and create a new one. We are sorry for that!\n"

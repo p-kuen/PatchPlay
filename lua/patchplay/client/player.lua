@@ -87,7 +87,20 @@ function cl_PPlay.play( url, name, mode, args )
 			cl_PPlay.showLoading = false
 		else
 			print("url: " .. url .. " was invalid")
-			cl_PPlay.showNotify( "Error: ID " .. errorID .. " - " .. errorName , "error", 10 )
+			if errorID != nil and errorName != nil then
+
+				cl_PPlay.showNotify( "ID " .. errorID .. " - " .. errorName , "error", 10 )
+
+			elseif errorID != nil then
+
+				cl_PPlay.showNotify( "ID " .. errorID , "error", 10 )
+
+			else
+
+				cl_PPlay.showNotify( "Unknown error - try again or use another stream" , "error", 10 )
+
+			end
+			
 			cl_PPlay.serverStream[ "playing" ] = false
 			cl_PPlay.showLoading = false
 		end
