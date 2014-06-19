@@ -25,6 +25,13 @@ cl_PPlay.BrowseURL = {
 
 		search = "tracks.json?client_id=" .. cl_PPlay.APIKeys.soundcloud .. "&q=[searchquery]"
 
+	},
+
+	youtube = {
+
+		search = "search?part=snippet&q=[searchquery]&key=" .. cl_PPlay.APIKeys.youtube,
+		player = "http://jwpsrv.com/library/9vZUqPWKEeO3lyIACtqXBA.js"
+
 	}
 
 }
@@ -104,7 +111,18 @@ end
 
 function cl_PPlay.search( info )
 
-	local rawURL = "http://api.soundcloud.com/" .. cl_PPlay.BrowseURL.soundcloud.search
+	local rawURL
+
+	if info.kind == "youtube" then
+
+		rawURL = "https://www.googleapis.com/youtube/v3/" .. cl_PPlay.BrowseURL.youtube.search
+
+	elseif info.kind == "soundcloud" then
+
+		rawURL = "http://api.soundcloud.com/" .. cl_PPlay.BrowseURL.soundcloud.search
+
+	end
+
 	local newURL = string.gsub( rawURL, "%[(%w+)%]", string.lower(info.search.searchField:GetValue()) )
 	newURL = string.gsub( newURL, "%s", "%%20" ) --Replace spaces with the %20 character
 
@@ -113,23 +131,35 @@ function cl_PPlay.search( info )
 
 		info.search.target:Clear()
 
-		table.foreach(entry, function(key, track)
+		local src
 
-			if track.streamable then
+		if info.kind == "youtube" then src = entry.items else src = entry end
 
-				local line = info.search.target:AddLine( track.title )
-				line.name = track.title
-				line.streamurl = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
+		table.foreach(src, function(key, track)
+
+			if info.kind == "soundcloud" then
+
+				if track.streamable then
+
+					local line = info.search.target:AddLine( track.title )
+					line.name = track.title
+					line.streamurl = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
+
+				else
+
+					fails = fails + 1
+					if info.fails != nil then info.fails:SetText("Tracks, which cannot be played: " .. fails) end
+
+				end
 
 			else
 
-				fails = fails + 1
-				if info.fails != nil then info.fails:SetText("Tracks, which cannot be played: " .. fails) end
+				local line = info.search.target:AddLine( track.snippet.title )
 
 			end
 
 		end)
-
+		
 	end)
 
 end

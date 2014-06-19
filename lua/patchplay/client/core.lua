@@ -1,7 +1,8 @@
 cl_PPlay.APIKeys = {
 	
 	dirble = "4fb8ff3c26a13ccbd6fd895ccbf5645845911ce9",
-	soundcloud = "92373aa73cab62ccf53121163bb1246e"
+	soundcloud = "92373aa73cab62ccf53121163bb1246e",
+	youtube = "AIzaSyA-UvMz6-Y71cz3HK4SH3MOhhZoM_3L4qY"
 }
 
 cl_PPlay.showLoading = false

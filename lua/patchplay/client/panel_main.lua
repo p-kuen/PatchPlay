@@ -106,6 +106,7 @@ function cl_PPlay.UMenu( Panel )
 	cl_PPlay.addlbl( Panel, "", "panel" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, { "private", "station" } )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, { "private", "soundcloud" } )
+	--cl_PPlay.addbtn( Panel, "Open YouTube Browser", cl_PPlay.openHTML, { "private", "youtube" } )
 
 	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
 		cl_PPlay.addlbl( Panel, "", "panel" )

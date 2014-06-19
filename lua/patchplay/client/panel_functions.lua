@@ -391,3 +391,27 @@ function cl_PPlay.addgrid( plist, x, y, cols, size )
 	return grid
 
 end
+
+function cl_PPlay.addhtml( plist )
+
+	local html = vgui.Create( "HTML", plist )
+
+	local content = [[<!DOCTYPE html>
+	<html>
+	<head>
+		<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700' rel='stylesheet' type='text/css'>
+		<script src="http://www.averi.at/jwplayer/jwplayer.js"></script>
+	</head>
+	<body>
+		<span style="font-family:'Source Sans Pro', sans-serif; font-size: "><div id="myElement">Loading the player...</div></span>
+		<iframe width="560" height="315" src="//www.youtube.com/embed/5JhXaF6GARQ?rel=0" frameborder="0" allowfullscreen></iframe>
+	</body>
+	</html>
+	]]
+
+	html:OpenURL( "http://www.youtube.com/embed/5JhXaF6GARQ?rel=0?&autoplay=1" )
+
+	
+	return html
+
+end

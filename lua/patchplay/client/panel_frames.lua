@@ -239,6 +239,19 @@ local function disableIfEnabled( button, bool )
 
 end
 
+function cl_PPlay.openHTML( args )
+
+	local w = 680
+	local h = 470
+
+	local frm = cl_PPlay.addfrm(w, h, "TEST", true)
+
+	local html = cl_PPlay.addhtml( frm )
+	html:SetSize( w - 10, h - 25)
+	html:SetPos( 5, 25 )
+
+end
+
 function cl_PPlay.openBrowser( args )
 
 	local info = {}
@@ -251,9 +264,12 @@ function cl_PPlay.openBrowser( args )
 		info.type = "track"
 		addition = "powered by SoundCloud API"
 		offsetY = 30
-	else
+	elseif info.kind == "station" then
 		info.type = "station"
 		addition = "powered by Dirble API"
+	elseif info.kind == "youtube" then
+		info.type = "track"
+		addition = " powered by YouTube Data API V3"
 	end
 
 	if info.mode == "private" then
@@ -328,7 +344,7 @@ function cl_PPlay.openBrowser( args )
 		srcbtn:SetDisabled(true)
 		
 
-	else
+	elseif info.kind == "station" then
 
 		info.browse = {}
 		info.browse.history = {}
@@ -342,6 +358,39 @@ function cl_PPlay.openBrowser( args )
 		addbtn:SetDisabled(true)
 
 		cl_PPlay.addbtn( frm, "Browse/Play", cl_PPlay.browse, { w - 115, h - 35 }, { 100, 20 }, info )
+
+	elseif info.kind == "youtube" then
+
+		local txt_search = cl_PPlay.addtext( frm, "Search: ", "frame", { 15, 30 }, { w - 100, 20} )
+		txt_search:RequestFocus()
+
+		info.search = {}
+		info.search.searchField = txt_search
+		info.search.target = blist
+
+		txt_search.OnEnter = function()
+
+			cl_PPlay.search( info )
+			
+		end
+
+		txt_search.OnTextChanged = function()
+
+			enableIfDisabled( srcbtn, txt_search:GetValue() != "" )
+			disableIfEnabled( srcbtn, txt_search:GetValue() == "" )
+
+		end
+
+		info.fails = cl_PPlay.addlbl( frm, "", "frame", 15, h - 90 )
+
+		pbtn = cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, { w - 115, h - 35 }, { 100, 20 }, info )
+		pbtn:SetDisabled(true)
+
+		addbtn = cl_PPlay.addbtn( frm, "Add To My Tracks", cl_PPlay.addtomy, { w - 230, h - 35 }, { 100, 20 }, info )
+		addbtn:SetDisabled(true)
+
+		srcbtn = cl_PPlay.addbtn( frm, "Search", cl_PPlay.search, { w - 70, 30 }, { 55, 20 }, info )
+		srcbtn:SetDisabled(true)
 
 	end
 
