@@ -1,218 +1,3 @@
-function cl_PPlay.openMy( args )
-
-	local strings = {}
-
-	local mode = args[1]
-	local kind = args[2]
-	
-	local singleKind = string.sub(kind, 0, -2)
-
-	if mode == "private" then
-
-		strings = {
-			frametitle = "PatchPlay - My Private " .. kind:gsub("^%l", string.upper)
-		}
-		
-	elseif mode == "server" then
-		strings = {
-			frametitle = "PatchPlay - Server " .. kind:gsub("^%l", string.upper)
-		}
-	end
-
-	local selectedLine
-
-	local w, h = 500, 350
-
-	-- FRAME
-	local frm = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
-
-	cl_PPlay.addlbl( frm, "Choose a " .. singleKind .. ":", "frame", 15, 30 )
-
-	-- TRACK LIST
-	local tlv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"Title"} )
-
-	function fillList()
-		
-
-		tlv:Clear()
-		if mode == "private" then
-
-			table.foreach( cl_PPlay.privateStreamList, function( key, value )
-
-				if value["kind"] == singleKind then
-
-					local line = tlv:AddLine( value["name"] )
-					line.url = value["stream"]
-					line.kind = value["kind"]
-
-				end
-
-			end)
-			
-		elseif mode == "server" then
-
-			table.foreach( cl_PPlay.streamList, function( key, value )
-
-				if value["kind"] == singleKind then
-
-					local line = tlv:AddLine( value["name"] )
-					line.url = value["stream"]
-					line.kind = value["kind"]
-
-				end
-
-			end)
-
-		end
-	end
-
-	fillList()
-
-	function tlv:OnClickLine( line, selected )
-
-		selectedLine = line
-		tlv:ClearSelection()
-		line:SetSelected( true )
-	end
-
-	local function delete()
-
-		if selectedLine != nil then
-
-			if mode == "private" then
-
-				cl_PPlay.deleteStream( selectedLine.url )
-				cl_PPlay.getStreamList()
-				fillList()
-				
-			elseif mode == "server" then
-
-				net.Start( "pplay_deletestream" )
-					net.WriteString( selectedLine.url )
-				net.SendToServer()
-
-				timer.Simple(0.1, fillList)
-
-			end
-		end
-
-	end
-
-	-- DELETE BUTTON IN FRAME
-	local dbtn = cl_PPlay.addbtn( frm, "Delete", delete, { 15, h - 40 }, { 80, 25 } )
-
-	local function play()
-
-		if selectedLine != nil then
-
-			if mode == "private" then
-
-					if selectedLine.kind == "playlist" then
-
-						cl_PPlay.getJSONInfo( selectedLine.url, function(entry)
-
-							cl_PPlay.fillPlaylist( entry.tracks, false )
-							cl_PPlay.playPlaylist( false )
-
-						end)
-
-					else
-
-						cl_PPlay.play( selectedLine.url, selectedLine:GetValue(1), "private" )
-
-					end
-				
-					
-				
-			elseif mode == "server" then
-
-				if selectedLine.kind == "playlist" then
-
-					cl_PPlay.getJSONInfo( selectedLine.url, function(entry)
-
-						cl_PPlay.fillPlaylist( entry.tracks, true )
-						timer.Simple(0.1, function()
-							cl_PPlay.playPlaylist( true )
-						end)
-
-					end)
-
-				else
-
-					cl_PPlay.sendToServer( selectedLine.url, selectedLine:GetValue(1), "play" )
-
-				end
-
-			end
-
-			frm:Close()
-			cl_PPlay.UpdateMenus()
-
-		end
-
-	end
-
-	-- PLAY BUTTON IN FRAME
-	local pbtn = cl_PPlay.addbtn( frm, "Play", play, { w - 115, h - 40 }, { 100, 25 } )
-
-end
-
---PLAYLIST
-function cl_PPlay.openPlayList( ply, cmd, args )
-
-	local strings = {}
-
-	if args[1] == "private" then
-		strings = {
-			frametitle = "PatchPlay - Private Playlist"
-		}
-		
-	elseif args[1] == "server" then
-		strings = {
-			frametitle = "PatchPlay - Server-Playlist"
-		}
-	end
-
-	local w, h = 400, 450
-
-	-- FRAME
-	local frm = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
-
-	-- LABEL IN FRAME
-	cl_PPlay.addlbl( frm, "You can see the current playlist here:", "frame", 15, 30 )
-
-	-- STREAM LIST
-	local plv = cl_PPlay.addlv( frm, 15, 50, w - 30, h - 100, {"Name"} )
-
-	function fillPlaylist()
-		plv:Clear()
-		if args[1] == "private" and cl_PPlay.privatePlaylist != nil then
-			cl_PPlay.getPlaylist()
-			table.foreach( cl_PPlay.privatePlaylist, function( key, value )
-
-				local line = plv:AddLine( value["name"] )
-				line.id = key
-				line.url = value["stream"]
-
-			end)
-			
-		elseif args[1] == "server" and cl_PPlay.serverPlaylist != nil then
-			cl_PPlay.getServerPlaylist( )
-			table.foreach( cl_PPlay.serverPlaylist, function( key, value )
-
-				local line = plv:AddLine( value["name"] )
-				line.id = key
-				line.url = value["stream"]
-
-			end)
-		end
-	end
-	
-	fillPlaylist()
-
-end
-concommand.Add( "pplay_openPlaylist", cl_PPlay.openPlayList)
-
 local function enableIfDisabled( button, bool )
 
 	if bool == nil then bool = true end
@@ -239,6 +24,373 @@ local function disableIfEnabled( button, bool )
 
 end
 
+function cl_PPlay.openPlaylist( server )
+
+	local strings = {}
+
+	if !server then
+
+		strings.frametitle = "PatchPlay - My Private Playlists"
+		
+	else
+
+		strings.frametitle = "PatchPlay - Server Playlists"
+
+	end
+
+	-- Variables
+	local w, h = 500, 350
+	local data = {}
+	local panel = {}
+	local functions = {}
+
+	-- Initialization
+	data.selected = {}
+	panel.buttons = {}
+	panel.lists = {}
+
+	-- FRAME
+	panel.frame = cl_PPlay.addfrm( w, h, strings["frametitle"], true )
+
+	-- DESCRIPTION
+	cl_PPlay.addlbl( panel.frame, "Choose a playlist:", "frame", 15, 30 )
+
+	-- LISTS
+	panel.lists.playlists = cl_PPlay.addlv( panel.frame, 15, 50, ( w - 30 ) / 3, h - 100, {"Playlists"} )
+	panel.lists.tracks = cl_PPlay.addlv( panel.frame, 15 + (w - 30) / 3 + 5, 50, (w - 30) / 3 * 2, h - 100, {"Tracks"} )
+
+	-- FILL PLAYLISTS FUNCTION
+	function functions.fillPlaylists()
+
+		panel.lists.playlists:Clear()
+
+		sh_PPlay.getSQLTable( "pplay_playlistnames", function( result )
+
+			data.selected.playlist = nil
+
+			table.foreach( result, function( key, playlist )
+
+				local line = panel.lists.playlists:AddLine( playlist.name )
+				line.id =  playlist.id
+
+			end)
+
+		end, server, LocalPlayer() )
+
+	end
+	functions.fillPlaylists()
+
+	-- FILL TRACKS FUNCTION
+	function functions.fillTracks( playlist_id )
+
+		panel.lists.tracks:Clear()
+
+		sh_PPlay.getSQLTable( "pplay_playlist", function( result )
+
+			data.selected.track = nil
+			data.selected.playlist.tracks = {}
+
+			table.foreach( result, function( key, stream )
+
+				if stream.playlist_id == data.selected.playlist.id then
+
+					local line = panel.lists.tracks:AddLine( stream.info.title )
+					--line.info = stream.info
+					line.id = stream.id
+					line.playlist_id = stream.playlist_id
+
+					table.insert( data.selected.playlist.tracks, stream )
+
+				end
+
+			end)
+
+		end, server, LocalPlayer() )
+
+	end
+
+	-- PLAYLIST CLICK FUNCTION
+	function panel.lists.playlists:OnClickLine( line, selected )
+
+		enableIfDisabled( panel.buttons.deletePlaylist )
+		enableIfDisabled( panel.buttons.play )
+
+		data.selected.playlist = {}
+		data.selected.playlist.id = line.id
+
+		panel.lists.playlists:ClearSelection()
+		line:SetSelected( true )
+
+		functions.fillTracks( line.id )
+
+	end
+
+	-- TRACK CLICK FUNCTION
+	function panel.lists.tracks:OnClickLine( line, selected )
+
+		enableIfDisabled( panel.buttons.deleteTrack )
+
+		data.selected.track = line.id
+
+		panel.lists.tracks:ClearSelection()
+		line:SetSelected( true )
+
+	end
+
+	-- DELETE PLAYLIST FUNCTION
+	function functions.deletePlaylist()
+
+		sh_PPlay.deleteRow( server, "pplay_playlist", "playlist_id", tostring( data.selected.playlist.id ) )
+		sh_PPlay.deleteRow( server, "pplay_playlistnames", "id", tostring( data.selected.playlist.id ) )
+
+		functions.fillPlaylists()
+		panel.lists.tracks:Clear()
+
+	end
+
+	-- DELETE TRACK FUNCTION
+	function functions.deleteTrack()
+
+		sh_PPlay.deleteRow( server, "pplay_playlist", "id", tostring( data.selected.track ) )
+		functions.fillTracks( data.selected.playlist.id )
+
+	end
+
+	-- PLAY PLAYLIST FUNCTION
+	function functions.play()
+
+		cl_PPlay.currentPlaylist = data.selected.playlist.tracks
+
+		if server then
+
+			cl_PPlay.playStream( cl_PPlay.currentPlaylist, server, 2 )
+
+		else
+
+			cl_PPlay.playlistPos.client = 1
+			cl_PPlay.playStream( cl_PPlay.currentPlaylist[ cl_PPlay.playlistPos.client ].info, server, 2 )
+
+		end
+
+	end
+
+	-- PLAY BUTTON IN FRAME
+	panel.buttons.play = cl_PPlay.addbtn( panel.frame, "Play", functions.play, { w - 115, h - 40 }, { 100, 25 } )
+	panel.buttons.play:SetDisabled( true )
+
+	-- DELETE PLAYLIST BUTTON
+	panel.buttons.deletePlaylist = cl_PPlay.addbtn( panel.frame, "Delete Playlist", functions.deletePlaylist, { 15, h - 40 }, { 80, 25 } )
+	panel.buttons.deletePlaylist:SetDisabled( true )
+
+	-- DELETE TRACK BUTTON
+	panel.buttons.deleteTrack = cl_PPlay.addbtn( panel.frame, "Delete track", functions.deleteTrack, { 15 + 80 + 5, h - 40 }, { 80, 25 } )
+	panel.buttons.deleteTrack:SetDisabled( true )
+
+end
+
+function cl_PPlay.openMy( server, kind )
+
+	local strings = {}
+	
+	if !server then
+
+		strings.frametitle = "PatchPlay - My Private " .. kind:gsub("^%l", string.upper)
+		
+	else
+
+		strings.frametitle = "PatchPlay - Server " .. kind:gsub("^%l", string.upper)
+
+	end
+
+	-- Variables
+	local w, h = 500, 350
+	local data = {}
+	local panel = {}
+	local functions = {}
+
+	-- Initialization
+	data.selected = {}
+	data.singleKind = string.sub(kind, 0, -2)
+	panel.buttons = {}
+	panel.textfields = {}
+	panel.lists = {}
+	panel.frames = {}
+
+	-- FRAME
+	panel.frame = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
+
+	-- DESCRIPTION
+	cl_PPlay.addlbl( panel.frame, "Choose a " .. data.singleKind .. ":", "frame", 15, 30 )
+
+	-- STREAM LIST
+	panel.lists.streamList = cl_PPlay.addlv( panel.frame, 15, 50, w - 30, h - 100, {"Title"} )
+
+	-- FILL STREAMLIST FUNCTION
+	function functions.fillList()
+
+		panel.lists.streamList:Clear()
+
+		sh_PPlay.getSQLTable( "pplay_streamlist", function( result )
+
+			table.foreach( result, function( key, stream )
+
+				if stream.kind == data.singleKind then
+
+					local line = panel.lists.streamList:AddLine( stream.info.title )
+					line.id = stream.id
+					line.info = stream.info
+					--line.kind = stream.kind
+
+				end
+
+			end)
+
+		end, server, LocalPlayer() )
+	end
+	functions.fillList()
+	
+	function panel.lists.streamList:OnClickLine( line, selected )
+
+		enableIfDisabled( panel.buttons.play )
+		enableIfDisabled( panel.buttons.delete )
+		enableIfDisabled( panel.buttons.addToPlaylist )
+
+		data.selected.id = line.id
+		data.selected.info = line.info
+
+		panel.lists.streamList:ClearSelection()
+		line:SetSelected( true )
+
+	end
+
+	function functions.delete()
+
+		sh_PPlay.deleteRow( server, "pplay_streamlist", "id", tostring( data.selected.id ) )
+		functions.fillList()
+
+	end
+
+	function functions.play()
+
+		cl_PPlay.playStream( data.selected.info, server )
+
+		panel.frame:Close()
+
+	end
+
+	function functions.addToPlaylist()
+
+		-- ADD FRAME
+		panel.frames.add = cl_PPlay.addfrm( 150, 150, "Add To Playlist", true )
+
+		-- PLAYLIST FRAMES
+		panel.lists.playlists = cl_PPlay.addlv( panel.frames.add, 10, 50, 130, 70, { "Playlists" } )
+
+		-- FILL PLAYLISTS FUNCTION
+		function functions.fillPlaylists()
+
+			panel.lists.playlists:Clear()
+
+			sh_PPlay.getSQLTable( "pplay_playlistnames", function( result )
+
+				table.foreach( result, function( key, playlist )
+
+					local line = panel.lists.playlists:AddLine( playlist.name )
+					line.id = playlist.id
+
+				end)
+
+			end, server, LocalPlayer() )
+
+		end
+		functions.fillPlaylists()
+
+		-- CLICK PLAYLISTS FUNCTION
+		function panel.lists.playlists:OnClickLine( line, selected )
+
+			enableIfDisabled( panel.buttons.add )
+
+			data.selected.playlist = line.id
+			panel.lists.streamList:ClearSelection()
+			line:SetSelected( true )
+
+		end
+
+		-- CREATE PLAYLIST FRAME FUNCTION
+		function functions.openCreatePlaylist()
+
+			-- CREATE PLAYLIST FUNCTION
+			function functions.createPlaylist()
+
+				sh_PPlay.insertRow( server, "pplay_playlistnames", panel.textfields.newPlaylist:GetValue() )
+				panel.frames.createPlaylist:Close()
+				functions.fillPlaylists()
+
+			end
+
+			panel.frames.createPlaylist = cl_PPlay.addfrm( 150, 80, "Create new playlist", true )
+			panel.textfields.newPlaylist = cl_PPlay.addtext( panel.frames.createPlaylist, "Name:", "frame", { 10, 30 }, { 130, 15 } )
+
+			function panel.textfields.newPlaylist:OnTextChanged()
+
+				if panel.textfields.newPlaylist:GetValue() != "" then
+
+					enableIfDisabled( panel.buttons.createPlaylist )
+
+				else
+
+					disableIfEnabled( panel.buttons.createPlaylist )
+
+				end
+
+			end
+
+			-- CREATE BUTTON
+			panel.buttons.createPlaylist = cl_PPlay.addbtn( panel.frames.createPlaylist, "Create", functions.createPlaylist, { 10, 50 }, { 130, 20 })
+			panel.buttons.createPlaylist:SetDisabled( true )
+
+		end
+
+		function functions.add()
+
+			if string.find(data.selected.info.streamurl, "soundcloud") and !string.find(data.selected.info.streamurl, "?client_id") then
+
+				data.selected.info.streamurl = data.selected.info.streamurl .. "?client_id=92373aa73cab62ccf53121163bb1246e"
+
+			end
+
+			sh_PPlay.insertRow( server, "pplay_playlist", tostring(data.selected.playlist), data.selected.info )
+			panel.frames.add:Close()
+
+		end
+
+		-- CREATE NEW PLAYLIST BUTTON
+		cl_PPlay.addbtn( panel.frames.add, "Create new playlist", functions.openCreatePlaylist, { 10, 30 }, { 130, 15 } )
+
+		-- ADD BUTTON
+		panel.buttons.add = cl_PPlay.addbtn( panel.frames.add, "Add", functions.add, { 10, 125 }, { 130, 15 } )
+		panel.buttons.add:SetDisabled( true )
+
+	end
+
+	-- DELETE BUTTON
+	panel.buttons.delete = cl_PPlay.addbtn( panel.frame, "Delete", functions.delete, { 15, h - 40 }, { 80, 25 } )
+	panel.buttons.delete:SetDisabled( true )
+
+	-- PLAY BUTTON IN FRAME
+	panel.buttons.play = cl_PPlay.addbtn( panel.frame, "Play", functions.play, { w - 115, h - 40 }, { 100, 25 } )
+	panel.buttons.play:SetDisabled( true )
+
+	--ADD TO PLAYLIST BUTTON
+	if kind == "tracks" then
+
+		panel.buttons.addToPlaylist = cl_PPlay.addbtn( panel.frame, "Add to Playlist", functions.addToPlaylist, { w - 230, h - 40}, { 100, 25 })
+		panel.buttons.addToPlaylist:SetDisabled( true )
+
+	end
+
+end
+
 function cl_PPlay.openHTML( args )
 
 	local w = 680
@@ -252,11 +404,11 @@ function cl_PPlay.openHTML( args )
 
 end
 
-function cl_PPlay.openBrowser( args )
+function cl_PPlay.openBrowser( mode, kind )
 
 	local info = {}
-	info.mode = args[1]
-	info.kind = args[2]
+	info.mode = mode
+	info.kind = kind
 
 	local addition
 	local offsetY = 0
@@ -304,7 +456,7 @@ function cl_PPlay.openBrowser( args )
 			enableIfDisabled( addbtn )
 		end
 
-		info.selectedLine = line
+		info.selectedLine = line.info
 		blist:ClearSelection()
 		line:SetSelected( true )
 

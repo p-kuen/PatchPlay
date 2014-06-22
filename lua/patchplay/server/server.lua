@@ -1,78 +1,157 @@
 -- GLOBAL VARIABLES
 sv_PPlay.currentStream = {}
-sv_PPlay.trackFinishedTime = 0
+sv_PPlay.currentPlaylist = {}
 
 -- SENDING FUNCTION
-function sv_PPlay.sendStream( info )
-	if info[ "stream" ] == "" or info[ "stream" ] == nil then return end
+function sv_PPlay.broadcast( stream )
 
-	net.Start( "pplay_sendstream" )
-		net.WriteTable( info )
+	if type(stream) == "string" then
+
+		stream = { stream }
+
+	end
+
+	net.Start( "pplay_broadcast" )
+
+		net.WriteTable( stream )
+		
 	net.Broadcast()
 
 end
 
-function cl_PPlay.checkServerTrack()
+local playlistPos = 0
+function sv_PPlay.nextSong()
 
-	if sv_PPlay.trackFinishedTime == 0 then return end
+	if playlistPos == table.Count(sv_PPlay.currentPlaylist) then return end
 
-	if CurTime() >= sv_PPlay.trackFinishedTime and sv_PPlay.currentStream["play_type"] == 2 then
+	local stream = {}
+	playlistPos = playlistPos + 1
+	stream.info = sv_PPlay.currentPlaylist[playlistPos].info
+	stream.specials = 2
 
-		local playlist = sql.Query("SELECT * FROM pplay_playlist")
+	if timer.Exists( "pplay_playlist_worker" ) then
 
-		local activeTrack = playlist[ sv_PPlay.currentStream["playlist_id"] ]
-		sv_PPlay.removeFromPlaylist( activeTrack["stream"] )
-		playlist = sql.Query("SELECT * FROM pplay_playlist")
+		timer.Adjust( "pplay_playlist_worker", tonumber(stream.info.duration) / 1000, 1, sv_PPlay.nextSong )
 
-		if playlist != nil then
-			local nextTrack = playlist[ sv_PPlay.currentStream["playlist_id"] ]
-			if nextTrack != nil then
-				sv_PPlay.sendStream( { stream = nextTrack["stream"] .."?client_id=92373aa73cab62ccf53121163bb1246e", command = "play", name = nextTrack["name"], args = { play_type = 2 } } )
-			else
-				sv_PPlay.currentStream["play_type"] = 0
-			end
-		else
-			sv_PPlay.currentStream["play_type"] = 0
-		end
-		
+	else
 
-		sv_PPlay.trackFinishedTime = 0
+		timer.Create( "pplay_playlist_worker", tonumber(stream.info.duration) / 1000, 1, sv_PPlay.nextSong )
 
 	end
+
+	sv_PPlay.broadcast( stream )
 
 end
-hook.Add("Think", "pplay_checkservertrack", cl_PPlay.checkServerTrack )
 
--- NETWORKING
-net.Receive( "pplay_sendtoserver", function( len, pl )
+----------------
+-- NETWORKING --
+----------------
 
-	sv_PPlay.sendStream( net.ReadTable() )
 
-end )
 
-net.Receive( "pplay_sendtrackinfo", function( len, pl )
+-- Player
 
-	sv_PPlay.currentStream = net.ReadTable()
+net.Receive( "pplay_play", function( len, pl )
 
-	if sv_PPlay.currentStream["length"] > 0 then
-		sv_PPlay.trackFinishedTime = CurTime() + sv_PPlay.currentStream["length"]
-	else
-		sv_PPlay.trackFinishedTime = 0
-	end
+	local Raw = net.ReadTable()
+	local stream = {}
+	stream.info = Raw[1]
+	stream.specials = Raw[2]
 
-end )
-
-net.Receive( "pplay_askthetime", function( len, pl )
-
-	net.Start( "pplay_sendthetime" )
-		net.WriteDouble( sv_PPlay.trackFinishedTime - CurTime() )
-	net.Send( pl )
+	sv_PPlay.broadcast( stream )
 
 end )
 
-net.Receive( "pplay_savestream", function( len, pl )
+net.Receive( "pplay_stop", function( len, pl )
 
-	sv_PPlay.saveNewStream( net.ReadTable() )
+	sv_PPlay.broadcast( "stop" )
+
+end )
+
+net.Receive( "pplay_playPlaylist", function( len, pl )
+
+	local Raw = net.ReadTable()
+	sv_PPlay.currentPlaylist = Raw[1]
+
+	playlistPos = 1
+	local stream = {}
+	stream.info = sv_PPlay.currentPlaylist[playlistPos].info
+	stream.specials = Raw[2]
+
+
+	timer.Create( "pplay_playlist_worker", tonumber(stream.info.duration) / 1000, 1, sv_PPlay.nextSong )
+
+	sv_PPlay.broadcast( stream )
+
+end )
+
+
+
+-- SQL
+
+net.Receive( "pplay_sendstreamlist", function( len, pl )
+
+	sh_PPlay.getSQLTable( "pplay_streamlist", nil, true, nil )
+
+end )
+
+net.Receive( "pplay_sendtable", function( len, pl )
+
+	local info = net.ReadTable()
+
+	sh_PPlay.getSQLTable( info.tblname, info.func, 2, info.ply )
+
+end )
+
+net.Receive( "pplay_addrow", function( len, pl )
+
+	local info = net.ReadTable()
+	sh_PPlay.insertRow( true, info.tblname, unpack( info.tblinfo ) )
+
+end )
+
+net.Receive( "pplay_deleterow", function( len, pl )
+
+	local info = net.ReadTable()
+	sh_PPlay.deleteRow( true, info.name, info.where[1], info.where[2] )
+
+end )
+
+net.Receive( "pplay_playlist_send", sv_PPlay.sendPlayList )
+
+net.Receive( "pplay_stream_save", function( len, pl )
+
+	sh_PPlay.stream.new( net.ReadTable() )
 	sv_PPlay.sendStreamList( )
 
 end )
+
+net.Receive( "pplay_settings_change", function( len, pl )
+
+	local setting = net.ReadTable()
+	sh_PPlay.changeRow( true, "pplay_settings", setting.where[1], setting.where[2], setting.values.name, setting.values.value )
+
+end )
+
+
+
+--AB HIER ALT
+
+
+
+net.Receive( "pplay_deletestream", function( len, pl )
+
+	sh_PPlay.deleteStream( net.ReadString() )
+	sv_PPlay.sendStreamList( )
+
+end )
+
+
+
+net.Receive( "pplay_playlist_remove", function( len, pl )
+
+	sh_PPlay.playlist.remove(  net.ReadString() )
+
+end )
+
+net.Receive( "pplay_clearplaylist", sh_PPlay.playlist.clear )

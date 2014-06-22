@@ -178,13 +178,7 @@ function cl_PPlay.addbtn( plist, text, cmd, ... )
 
 		if type(cmd) == "function" then
 
-			local args = {}
-
-			if #btn.vararg == 1 then
-				args = btn.vararg[1]
-			end	
-
-			cmd(args)
+			cmd(unpack(btn.vararg))
 
 		elseif type(cmd) == "string" then
 

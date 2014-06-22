@@ -14,10 +14,10 @@ cl_PPlay.BrowseURL = {
 
 	dirble = { 
 
-	"primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble,
-	"childCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/primaryid/[id]",
-	"stations/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]",
-	"station/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]"
+		"primaryCategories/apikey/" .. cl_PPlay.APIKeys.dirble,
+		"childCategories/apikey/" .. cl_PPlay.APIKeys.dirble .. "/primaryid/[id]",
+		"stations/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]",
+		"station/apikey/" .. cl_PPlay.APIKeys.dirble .. "/id/[id]"
 
 	},
 
@@ -44,7 +44,14 @@ function cl_PPlay.browse( info, back )
 
 	if !back and info.directurl != nil and info.directurl:GetValue() != "" then
 
-		cl_PPlay.playStream( info.directurl:GetValue(), "", serverbool )
+		local streaminfo = {
+
+			streamurl = info.directurl:GetValue(),
+			title = ""
+
+		}
+
+		cl_PPlay.playStream( streaminfo, serverbool )
 		return
 
 	end
@@ -80,7 +87,14 @@ function cl_PPlay.browse( info, back )
 
 		if !back and info.browse.stage == table.Count( cl_PPlay.BrowseURL.dirble ) then
 
-			cl_PPlay.playStream( entry.streamurl, entry.name, serverbool )
+			local streaminfo = {
+
+				title = entry.name,
+				streamurl = entry.streamurl
+
+			}
+
+			cl_PPlay.playStream( streaminfo, serverbool )
 			return
 		
 		end
@@ -91,7 +105,11 @@ function cl_PPlay.browse( info, back )
 
 			local line = info.browse.target:AddLine( value.name )
 
-			line.id = value.id
+			line.info = {
+
+				id = value.id
+
+			}
 
 		end)
 
@@ -142,8 +160,20 @@ function cl_PPlay.search( info )
 				if track.streamable then
 
 					local line = info.search.target:AddLine( track.title )
+					line.info = {
+
+						title = track.title,
+						streamurl = track.stream_url,
+						id = track.id,
+						duration = track.duration,
+						format = track.original_format
+
+					}
+		
+					--[[
 					line.name = track.title
 					line.streamurl = track.stream_url .. "?client_id=" .. cl_PPlay.APIKeys.soundcloud
+					]]
 
 				else
 
@@ -169,11 +199,20 @@ function cl_PPlay.searchplay( info )
 	if info.directurl != nil and info.directurl:GetValue() != "" then
 
 		cl_PPlay.getJSONInfo( info.directurl:GetValue(), function(entry)
+
+			local streaminfo = {
+
+				title = entry.title,
+				streamurl = entry.stream_url,
+				duration = entry.duration
+
+			}
+
 			if info.mode == "private" then
 
 					if entry.kind == "track" then
 
-						cl_PPlay.playStream( entry.stream_url, entry.title, false )
+						cl_PPlay.playStream( streaminfo, false )
 
 					elseif entry.kind == "playlist" then
 
@@ -186,7 +225,7 @@ function cl_PPlay.searchplay( info )
 
 					if entry.kind == "track" then
 
-						cl_PPlay.playStream( entry.stream_url, entry.title, true )
+						cl_PPlay.playStream( streaminfo, true )
 
 					elseif entry.kind == "playlist" then
 
@@ -203,12 +242,12 @@ function cl_PPlay.searchplay( info )
 
 	end
 
-	if info.selectedLine.streamurl == nil or info.selectedLine.name == nil then return end
+	if info.selectedLine == nil then return end
 
 	local serverbool = false
 	if info.mode == "server" then serverbool = true end
 
-	cl_PPlay.playStream( info.selectedLine.streamurl, info.selectedLine.name, serverbool )
+	cl_PPlay.playStream( info.selectedLine, serverbool )
 
 end
 
@@ -223,7 +262,13 @@ function cl_PPlay.addtomy( info )
 
 			cl_PPlay.getJSONInfo( info.directurl:GetValue(), function(entry)
 
-				cl_PPlay.saveNewStream( entry.stream_url, entry.title, "tracks", serverbool )
+				local streaminfo = {}
+				streaminfo.title = entry.title
+				streaminfo.streamurl = entry.stream_url
+				streaminfo.duration = entry.duration
+
+				sh_PPlay.insertRow( serverbool, "pplay_streamlist", streaminfo, "track" )
+				--sh_PPlay.stream.new( entry.stream_url, entry.title, "tracks", serverbool )
 
 			end)
 
@@ -237,7 +282,11 @@ function cl_PPlay.addtomy( info )
 
 			cl_PPlay.addbtn( frm, "Save", function()
 
-				cl_PPlay.saveNewStream( info.directurl:GetValue(), txt_name:GetValue(), "stations", serverbool )
+				local streaminfo = {}
+				streaminfo.title = txt_name:GetValue()
+				streaminfo.streamurl = info.directurl:GetValue()
+
+				sh_PPlay.insertRow( serverbool, "pplay_streamlist", streaminfo, "station" )
 
 				frm:Close()
 
@@ -252,7 +301,9 @@ function cl_PPlay.addtomy( info )
 	if info.selectedLine == nil then return end
 	if info.kind == "soundcloud" then
 
-		cl_PPlay.saveNewStream( info.selectedLine.streamurl, info.selectedLine.name, "track", serverbool )
+		sh_PPlay.insertRow( serverbool, "pplay_streamlist", info.selectedLine, "track" )
+
+		--sh_PPlay.stream.new( info.selectedLine.streamurl, info.selectedLine.name, "track", serverbool )
 
 	else
 
@@ -262,7 +313,11 @@ function cl_PPlay.addtomy( info )
 
 		cl_PPlay.getJSONInfo( stationURL, function(entry)
 
-			cl_PPlay.saveNewStream( entry.streamurl, entry.name, "station", serverbool )
+			local streaminfo = {}
+			streaminfo.title = entry.name
+			streaminfo.streamurl = entry.streamurl
+
+			sh_PPlay.insertRow( serverbool, "pplay_streamlist", streaminfo, "station" )
 
 		end)
 

@@ -7,6 +7,11 @@ function cl_PPlay.AMenu( Panel )
 	-- DELETE CONTROLS
 	Panel:ClearControls()
 
+	-- UPDATE PANELS
+	if not cl_PPlay.ACPanel then
+		cl_PPlay.ACPanel = Panel
+	end
+
 	-- CHECK ADMIN
 	if game.SinglePlayer() then
 		cl_PPlay.addlbl( Panel, "You are playing in SinglePlayer! This only works on Multiplayer-Servers.", "panel" )
@@ -16,36 +21,23 @@ function cl_PPlay.AMenu( Panel )
 		return
 	end
 
-	-- UPDATE PANELS
-	if not cl_PPlay.ACPanel then
-		cl_PPlay.ACPanel = Panel
-	end
-
 	-- PANEL ELEMENTS
 	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay", "panel" )
-	cl_PPlay.addbtn( Panel, "Server Stations", cl_PPlay.openMy, "panel", { "server", "stations" } )
-	cl_PPlay.addbtn( Panel, "Server Tracks", cl_PPlay.openMy, "panel", { "server", "tracks" } )
-	cl_PPlay.addbtn( Panel, "Server Playlists", cl_PPlay.openMy, "panel", { "server", "playlists" } )
+	cl_PPlay.addbtn( Panel, "Server Stations", cl_PPlay.openMy, true, "stations" )
+	cl_PPlay.addbtn( Panel, "Server Tracks", cl_PPlay.openMy, true, "tracks" )
+	cl_PPlay.addbtn( Panel, "Server Playlists", cl_PPlay.openPlaylist, true )
 	cl_PPlay.addlbl( Panel, "", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, { "server", "station" } )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, { "server", "soundcloud" } )
+	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, "server", "station" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, "server", "soundcloud" )
 
-	if cl_PPlay.currentStream != nil and cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() == 0 then cl_PPlay.serverStream["playing"] = false end
-
-	if cl_PPlay.serverStream != nil and cl_PPlay.serverStream["playing"] then
+	if cl_PPlay.sStream != nil and cl_PPlay.sStream.playing then
 		cl_PPlay.addlbl( Panel, "", "panel" )
-		if cl_PPlay.serverStream["name"] != "" then
-			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.serverStream["name"], "panel" )
+		if cl_PPlay.sStream.info.title != "" then
+			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.sStream.info.title, "panel" )
 		else
-			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.serverStream["stream"], "panel" )
+			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.sStream.info.streamurl, "panel" )
 		end
-		cl_PPlay.addbtn( Panel, "Stop streaming", "stopServerStreaming", nil, "server" )
-	end
-
-	if cl_PPlay.serverPlaylist != nil and table.Count(cl_PPlay.serverPlaylist) != 0 then
-
-		cl_PPlay.addbtn( Panel, "Open Server-Playlist", "openPlaylist", nil, "server" )
-
+		cl_PPlay.addbtn( Panel, "Stop streaming", cl_PPlay.sendToServer, "stop", nil )
 	end
 
 end
@@ -67,50 +59,55 @@ function cl_PPlay.UMenu( Panel )
 	-- PANEL ELEMENTS
 
 	-- Main Switch
-	cl_PPlay.addlbl( Panel, "Main Switch:", "panel" )
-	local chk = vgui.Create( "DCheckBoxLabel" )
-	chk:SetText( "Activate PatchPlay" )
-	chk:SetChecked( cl_PPlay.use )
-	chk:SetDark( true )
-	
+	local chk_cl_main = cl_PPlay.addchk( Panel, "Use PatchPlay", cl_PPlay.use )
 
-	function chk:OnChange()
+	function chk_cl_main:OnChange()
 
-		if !chk:GetChecked() and cl_PPlay.station != nil and cl_PPlay.station:IsValid() then
+		if chk_cl_main:GetChecked() then
+
+			cl_PPlay.use = true
+			if cl_PPlay.isMusicPlaying( true ) and cl_PPlay.cStream.server then
+
+				cl_PPlay.playStream( cl_PPlay.sStream.url, cl_PPlay.sStream.name, true )
+
+			end
+
+		else
+
 			cl_PPlay.use = false
-			cl_PPlay.stop(cl_PPlay.currentStream["stream"])
-		elseif cl_PPlay.currentStream["stream_type"] == "server" and cl_PPlay.serverStream["playing"] then
-			cl_PPlay.use = true
-			cl_PPlay.play( cl_PPlay.serverStream["stream"], cl_PPlay.serverStream["name"], "server" )
-		elseif cl_PPlay.currentStream["stream_type"] == "private" then
-			cl_PPlay.use = true
+			cl_PPlay.stop()
+
 		end
+
 		cl_PPlay.UpdateMenus()
-		
+
 	end
 
 	Panel:AddItem( chk )
 
-	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
-		Panel:AddControl( "Label", {Text = "You are listening in " .. cl_PPlay.currentStream["stream_type"] .. "-mode"})
+	if !cl_PPlay.use then return end
+
+	if cl_PPlay.isMusicPlaying() then
+		cl_PPlay.addlbl( Panel, "You are listening in " .. cl_PPlay.cStream.serverText .. "-mode", "panel" )
 	end
 
-	if cl_PPlay.currentStream["stream_type"] == "server" then
-		cl_PPlay.addlbl( Panel, "If the server is playing music you don't like, you can go in private mode: You can decide what you hear and " ..
-			"nobody else will hear this music, just you. There are special panels for SoundCloud and Internet Radio Streams (mp3/m3u)", "panel" )
+	if cl_PPlay.cStream.server then
+		cl_PPlay.addlbl( Panel, "If the server is playing music you don't like, you can switch to\nprivate mode: You can decide what you hear and " ..
+			"nobody\nelse will hear this music, just you. There are special panels\nfor SoundCloud and Internet Radio Streams.\n" ..
+			"(Note, that may not every station or track is really working)", "panel" )
 	end
 
-	cl_PPlay.addbtn( Panel, "My Stations", cl_PPlay.openMy, { "private", "stations" } )
-	cl_PPlay.addbtn( Panel, "My Tracks", cl_PPlay.openMy, { "private", "tracks" } )
-	cl_PPlay.addbtn( Panel, "My Playlists", cl_PPlay.openMy, { "private", "playlists" } )
+	cl_PPlay.addbtn( Panel, "My Stations", cl_PPlay.openMy, false, "stations" )
+	cl_PPlay.addbtn( Panel, "My Tracks", cl_PPlay.openMy, false, "tracks" )
+	cl_PPlay.addbtn( Panel, "My Playlists", cl_PPlay.openPlaylist, false )
 	cl_PPlay.addlbl( Panel, "", "panel" )
-	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, { "private", "station" } )
-	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, { "private", "soundcloud" } )
+	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, "private", "station" )
+	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, "private", "soundcloud" )
 	--cl_PPlay.addbtn( Panel, "Open YouTube Browser", cl_PPlay.openHTML, { "private", "youtube" } )
 
-	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() and cl_PPlay.station:GetState() != 0 then
+	if cl_PPlay.isMusicPlaying() then
 		cl_PPlay.addlbl( Panel, "", "panel" )
-		cl_PPlay.addbtn( Panel, "Stop streaming", "stopStreaming", "private" )
+		cl_PPlay.addbtn( Panel, "Stop streaming", cl_PPlay.stop )
 	end
 	
 
@@ -118,33 +115,27 @@ function cl_PPlay.UMenu( Panel )
 	
 	local sldr_vol
 
-	if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then
+	if cl_PPlay.isMusicPlaying() then
 		cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
 		
-		sldr_vol = cl_PPlay.addsldr( Panel, cl_PPlay.station:GetVolume() * 100 )
+		sldr_vol = cl_PPlay.addsldr( Panel, cl_PPlay.cStream.station:GetVolume() * 100 )
 
 		sldr_vol.OnValueChanged = function( panel, value )
-			if cl_PPlay.station != nil and cl_PPlay.station:IsValid() then cl_PPlay.station:SetVolume( value / 100 ) end
+			if cl_PPlay.isMusicPlaying() then cl_PPlay.cStream.station:SetVolume( value / 100 ) end
 		end
 	end
 
-	if cl_PPlay.currentStream["stream_type"] == "private" or !cl_PPlay.use then
+	if cl_PPlay.isMusicPlaying( true ) then
 
-		if cl_PPlay.serverStream["playing"] and cl_PPlay.serverStream["name"] != "" then
-			cl_PPlay.addlbl( Panel, "The server currently streams " .. cl_PPlay.serverStream["name"], "panel" )
-		elseif cl_PPlay.serverStream["playing"] then
-			cl_PPlay.addlbl( Panel, "The server currently streams this Stream-URL: " .. cl_PPlay.serverStream["stream"], "panel" )
+		if cl_PPlay.sStream.info.title != nil and cl_PPlay.sStream.info.title != "" then
+			cl_PPlay.addlbl( Panel, "The server currently streams " .. cl_PPlay.sStream.info.title, "panel" )
+		else
+			cl_PPlay.addlbl( Panel, "The server currently streams this Stream-URL: " .. cl_PPlay.sStream.info.streamurl, "panel" )
 		end
 
-		if cl_PPlay.serverStream["playing"] and cl_PPlay.currentStream["stream_type"] == "private" and cl_PPlay.use then
-			cl_PPlay.addbtn( Panel, "Switch to Server-Stream", "switchToServer", nil, "private" )
+		if !cl_PPlay.cStream.server then
+			cl_PPlay.addbtn( Panel, "Switch to Server-Stream", cl_PPlay.play, cl_PPlay.sStream.info, true, 1 )
 		end
-
-	end
-
-	if cl_PPlay.privatePlaylist != nil and table.Count(cl_PPlay.privatePlaylist) != 0 then
-
-		cl_PPlay.addbtn( Panel, "Open Playlist", "openPlaylist", nil, "private" )
 
 	end
 
@@ -164,70 +155,101 @@ function cl_PPlay.SMenu( Panel )
 		cl_PPlay.SCPanel = Panel
 	end
 
-	-- PANEL ELEMENTS
+	local function addchecks()
 
-	if cl_PPlay.getSetting( "allowClients", true ) then
+		-- PANEL ELEMENTS
 
-		cl_PPlay.addlbl( Panel, "Client Settings for PatchPlay\nThese settings only affect you", "panel" )
+		if tobool(cl_PPlay.getSetting( "allowClients", true )) == true then
 
-		local chk_cl_showNP = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.getSetting( "nowPlaying", false ) )
+			cl_PPlay.addlbl( Panel, "Client Settings for PatchPlay\nThese settings only affect you", "panel" )
 
-		function chk_cl_showNP:OnChange()
+			local chk_cl_showNP = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.getSetting( "nowPlaying", false ) )
 
-			cl_PPlay.saveSetting( "nowPlaying", tostring(tobool(chk_cl_showNP:GetChecked())), false )
+			function chk_cl_showNP:OnChange()
+
+				cl_PPlay.saveSetting( "nowPlaying", tobool(chk_cl_showNP:GetChecked()), false )
+
+			end
+
+			local chk_cl_showQ = cl_PPlay.addchk( Panel, "Show Play Queue", cl_PPlay.getSetting( "queue", false ) )
+
+			function chk_cl_showQ:OnChange()
+
+				cl_PPlay.saveSetting( "queue", tobool(chk_cl_showQ:GetChecked()), false )
+
+			end
+
+			local chk_cl_showBN = cl_PPlay.addchk( Panel, "Show Big Notification", cl_PPlay.getSetting( "bigNotification", false ) )
+
+			function chk_cl_showBN:OnChange()
+
+				cl_PPlay.saveSetting( "bigNotification", tobool(chk_cl_showBN:GetChecked()), false )
+				
+			end
+
+		else
+
+			cl_PPlay.addlbl( Panel, "Changing the settings on the client is disabled for this server! Contact the server admin!", "panel" )
 
 		end
 
-		local chk_cl_showBN = cl_PPlay.addchk( Panel, "Show Big Notification", cl_PPlay.getSetting( "bigNotification", false ) )
+		-- CHECK ADMIN
+		if !game.SinglePlayer() and !LocalPlayer():IsSuperAdmin() then
+			return
+		elseif LocalPlayer():IsSuperAdmin() then
 
-		function chk_cl_showBN:OnChange()
+			cl_PPlay.addlbl( Panel, "Server Settings for PatchPlay\nThese settings affect everybody on this server!", "panel" )
 
-			cl_PPlay.saveSetting( "bigNotification", tostring(tobool(chk_cl_showBN:GetChecked())), false )
+		end
+
+		--SERVER SETTINGS
+
+		local chk_sv_showNP = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.getSetting( "nowPlaying", true ) )
+
+		function chk_sv_showNP:OnChange()
+
+			cl_PPlay.saveSetting( "nowPlaying", tobool(chk_sv_showNP:GetChecked()), true )
 			
 		end
 
-	else
+		local chk_sv_showQ = cl_PPlay.addchk( Panel, "Show Play Queue", cl_PPlay.getSetting( "queue", true ) )
 
-		cl_PPlay.addlbl( Panel, "Changing the settings clientside is disabled for this server!", "panel" )
+		function chk_sv_showQ:OnChange()
+
+			cl_PPlay.saveSetting( "queue", tobool(chk_sv_showQ:GetChecked()), true )
+			
+		end
+
+		local chk_sv_showBN = cl_PPlay.addchk( Panel, "Show Big Notification", cl_PPlay.getSetting( "bigNotification", true ) )
+
+		function chk_sv_showBN:OnChange()
+
+			cl_PPlay.saveSetting( "bigNotification", tobool(chk_sv_showBN:GetChecked()), true )
+			
+		end
+
+		local chk_sv_allowC = cl_PPlay.addchk( Panel, "Allow clients to change the settings for themselves", cl_PPlay.getSetting( "allowClients", true ) )
+
+		function chk_sv_allowC:OnChange()
+
+			cl_PPlay.saveSetting( "allowClients", tobool(chk_sv_allowC:GetChecked()), true, false )
+			
+		end
 
 	end
 
-	-- CHECK ADMIN
-	if !game.SinglePlayer() and !LocalPlayer():IsSuperAdmin() then
-		return
-	elseif game.SinglePlayer() then
+	sh_PPlay.getSQLTable( "pplay_settings", function( result )
 
-	else
+		cl_PPlay.settings.server = result
+		addchecks()
 
-		cl_PPlay.addlbl( Panel, "Server Settings for PatchPlay\nThese settings affect everybody on this server!", "panel" )
+	end, true, LocalPlayer() )
 
-	end
+	sh_PPlay.getSQLTable( "pplay_settings", function( result )
 
-	--SERVER SETTINGS
+		cl_PPlay.settings.client = result
 
-	local chk_sv_showNP = cl_PPlay.addchk( Panel, "Show NowPlaying", cl_PPlay.getSetting( "nowPlaying", true ) )
-
-	function chk_sv_showNP:OnChange()
-
-		cl_PPlay.saveSetting( "nowPlaying", tostring(tobool(chk_sv_showNP:GetChecked())), true, true )
-		
-	end
-
-	local chk_sv_showBN = cl_PPlay.addchk( Panel, "Show Big Notification", cl_PPlay.getSetting( "bigNotification", true ) )
-
-	function chk_sv_showBN:OnChange()
-
-		cl_PPlay.saveSetting( "bigNotification", tostring(tobool(chk_sv_showBN:GetChecked())), true, true )
-		
-	end
-
-	local chk_sv_allowC = cl_PPlay.addchk( Panel, "Allow clients to change the settings for themselves", cl_PPlay.getSetting( "allowClients", true ) )
-
-	function chk_sv_allowC:OnChange()
-
-		cl_PPlay.saveSetting( "allowClients", tostring(tobool(chk_sv_allowC:GetChecked())), true, false )
-		
-	end
+	end, false, LocalPlayer() )
 
 end
 

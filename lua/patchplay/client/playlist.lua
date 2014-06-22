@@ -2,6 +2,10 @@
 -- PLAYLIST --
 --------------
 
+cl_PPlay.playlistPos = {}
+cl_PPlay.playlistPos.client = 0
+cl_PPlay.playlistPos.server = 0
+
 function cl_PPlay.playPlaylist( server )
 
 	if server == nil then server = false end
@@ -41,7 +45,7 @@ function cl_PPlay.fillPlaylist( filltable, server )
 
 		local added = 0
 
-		cl_PPlay.clearServerPlaylist()
+		cl_PPlay.sendToServer( "playlist_clear" )
 
 		table.foreach( filltable, function(id, track)
 
@@ -77,46 +81,35 @@ function cl_PPlay.fillPlaylist( filltable, server )
 
 end
 
-function cl_PPlay.clearServerPlaylist()
-
-	net.Start( "pplay_clearplaylist" )
-		net.WriteString( "" )
-	net.SendToServer()
-
-end
-
-function cl_PPlay.addToServerPlaylist( stream, streamname )
-
-	local track = {
-
-		url = stream,
-		name = streamname
-	}
-
-	net.Start( "pplay_addtoplaylist" )
-		net.WriteTable( track )
-	net.SendToServer()
-
-end
-
 function cl_PPlay.deleteFromServerPlaylist( stream )
 
-	net.Start( "pplay_addtoplaylist" )
-		net.WriteString( stream )
-	net.SendToServer()
+	cl_PPlay.sendToServer( "playlist_remove", stream)
 
 end
 
 function cl_PPlay.getServerPlaylist( )
 
-	net.Start( "pplay_getplaylist" )
-		net.WriteString( "" )
-	net.SendToServer()
+	cl_PPlay.sendToServer( "playlist_get" )
 
 end
 
 net.Receive( "pplay_sendplaylist", function( len, pl )
 
-	cl_PPlay.serverPlaylist = net.ReadTable()
+	cl_PPlay.playList.server = net.ReadTable()
 
 end )
+
+function cl_PPlay.playlistCheck()
+
+	if cl_PPlay.isMusicPlaying() and cl_PPlay.cStream.playlist and !cl_PPlay.cStream.server and cl_PPlay.cStream.station:GetTime() >= (cl_PPlay.cStream.station:GetLength() - 5) then
+
+		if table.Count(cl_PPlay.currentPlaylist) <= cl_PPlay.playlistPos.client then return end
+
+		cl_PPlay.playlistPos.client = cl_PPlay.playlistPos.client + 1
+
+		cl_PPlay.playStream( cl_PPlay.currentPlaylist[ cl_PPlay.playlistPos.client ].info, false, 2 )
+
+	end
+
+end
+hook.Add( "Think", "pplay_playlistcheck", cl_PPlay.playlistCheck )

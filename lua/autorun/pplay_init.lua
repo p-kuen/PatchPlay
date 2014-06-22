@@ -4,6 +4,7 @@
 
 sv_PPlay = {}
 cl_PPlay = {}
+sh_PPlay = {}
 
 
 
@@ -12,21 +13,28 @@ cl_PPlay = {}
 -------------------------
 
 AddCSLuaFile()
+AddCSLuaFile("patchplay/shared/core.lua")
 AddCSLuaFile("patchplay/client/core.lua")
 AddCSLuaFile("patchplay/client/hud.lua")
 AddCSLuaFile("patchplay/client/player.lua")
 AddCSLuaFile("patchplay/client/playlist.lua")
 AddCSLuaFile("patchplay/client/panel_functions.lua")
 AddCSLuaFile("patchplay/client/panel_main.lua")
+AddCSLuaFile("patchplay/shared/sql.lua")
 AddCSLuaFile("patchplay/client/sql.lua")
 AddCSLuaFile("patchplay/client/panel_frames.lua")
 AddCSLuaFile("patchplay/client/browser.lua")
 
 
 
---------------------------------
---  LOAD SERVER/CLIENT FILES  --
---------------------------------
+---------------------------------------
+--  LOAD SHARED/SERVER/CLIENT FILES  --
+---------------------------------------
+
+--Add shared files
+
+include( "patchplay/shared/sql.lua")
+include( "patchplay/shared/core.lua")
 
 if SERVER then
 
@@ -49,3 +57,5 @@ else
 	include( "patchplay/client/browser.lua" )
 	
 end
+
+

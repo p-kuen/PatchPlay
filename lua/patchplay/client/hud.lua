@@ -55,6 +55,8 @@ local function drawNotify(key, value)
 
 	surface.SetFont( "NotificationFont_big" )
 
+	if value.text == nil then return end
+
 	local notify_text
 	if string.len(value.text) > 35 then
 		if value.style == "play" or value.style == "stop" then
@@ -103,7 +105,12 @@ local function drawNotify(key, value)
 		surface.SetDrawColor( 255, 255, 255, value.alpha )
 		draw.NoTexture()
 		surface.DrawPoly( triangle )
-		draw.SimpleText( "Started following " .. cl_PPlay.currentStream["stream_type"] .. "-stream:", "NotificationFont_small", xpos + 110, ypos + 10 , Color( 75, 75, 75, value.alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+
+		local server_text = ""
+		if cl_PPlay.cStream.server then
+			local server_text = "Server-"
+		end
+		draw.SimpleText( "Started following " .. server_text .. "Stream:", "NotificationFont_small", xpos + 110, ypos + 10 , Color( 75, 75, 75, value.alpha ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 
 	elseif value.style == "stop" then
 
@@ -180,8 +187,51 @@ function cl_PPlay.slideText( text, rate )
 	return string.sub(text, startpos, endpos)
 end
 
+local function drawQueue()
 
-local function drawNowPlaying( streamType, state)
+	--PLAYLIST MODE
+
+	local xpos = 0
+	local ypos = ScrH() / 3 + 62 + 10
+	local w = 150
+	local h = 124
+
+	draw.RoundedBox( 0, xpos, ypos, w, h , Color( 255, 255, 255, 200 ) )
+	draw.SimpleText( "Play Queue:", "NowPlaying_header", xpos + 5, ypos + 5 , Color( 75, 75, 75, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+
+	local queue_now = cl_PPlay.cStream.info.title
+	if string.len( queue_now ) > 25 then
+		queue_now = string.sub( queue_now, 1, 22 ) .. "..."
+	end	
+
+	draw.SimpleText( queue_now, "NowPlaying_header", xpos + 5, ypos + 20 , Color( 255, 150, 0, 230 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+
+	local inQueue = 0
+	table.foreach( cl_PPlay.currentPlaylist, function(key, stream)
+
+		local ppos = 0
+
+		if cl_PPlay.cStream.server then ppos = cl_PPlay.playlistPos.server else ppos = cl_PPlay.playlistPos.client end
+
+		if key > ppos and inQueue <= 5 then
+
+			inQueue = inQueue + 1
+
+			local text = stream.info.title
+
+			if string.len( text ) > 25 then
+				text = string.sub( text, 1, 22 ) .. "..."
+			end	
+
+			draw.SimpleText( text, "NowPlaying_header", xpos + 5, ypos + 20 + 20 * inQueue , Color( 100, 100, 100, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+
+		end
+
+	end)
+
+end
+
+local function drawNowPlaying()
 
 	--local tw, th = surface.GetTextSize( notify_text )
 	local w = 150
@@ -189,27 +239,32 @@ local function drawNowPlaying( streamType, state)
 	local xpos = 0
 	local ypos = ScrH() / 3
 
-	local streamName = ""
+	local text = "error"
+	--print(cl_PPlay.cStream.url)
 
-	if cl_PPlay.currentStream["name"] != "" then
+	if cl_PPlay.cStream.info.title != nil and cl_PPlay.cStream.info.title != "" then
 
-		streamName = cl_PPlay.currentStream["name"]
+		--print("name")
+		text = cl_PPlay.cStream.info.title
 
 	else
-		streamName = cl_PPlay.currentStream["stream"]
+		--print("url")
+		text = cl_PPlay.cStream.info.streamurl
 	end
 
-	if string.len(streamName) > 17 then
-		streamName = cl_PPlay.slideText( streamName, 4 )
+	--print(text)
+
+	if string.len(text) > 17 then
+		text = cl_PPlay.slideText( text, 4 )
 	end	
 
 	local streamType = ""
 
-	if cl_PPlay.currentStream["stream_type"] == "server" then
+	if cl_PPlay.cStream.server then
 
 		streamType = "Server-Stream"
 
-	elseif cl_PPlay.currentStream["stream_type"] == "private" then
+	else
 
 		streamType = "Private-Stream"
 
@@ -219,18 +274,18 @@ local function drawNowPlaying( streamType, state)
 	draw.RoundedBox( 0, xpos + w, ypos, 5, h, Color( 255, 150, 0, 200 ) )
 
 	draw.SimpleText( "Now Playing:", "NowPlaying_header", xpos + 5, ypos + 5 , Color( 75, 75, 75, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
-	draw.SimpleText( streamName, "NowPlaying_text", xpos + 5, ypos + 25 , Color( 75, 75, 75, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+	draw.SimpleText( text, "NowPlaying_text", xpos + 5, ypos + 25 , Color( 75, 75, 75, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 	draw.SimpleText( streamType, "NowPlaying_small", xpos + 5, ypos + 25 + 14 , Color( 100, 100, 100, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 
-	if cl_PPlay.station:GetLength() != nil and cl_PPlay.station:GetLength() > 0 then
-		local time_percent = cl_PPlay.station:GetTime() / cl_PPlay.station:GetLength()
-		if state == 1 then
+	if cl_PPlay.cStream.station:GetLength() != nil and cl_PPlay.cStream.station:GetLength() > 0 then
+		local time_percent = cl_PPlay.cStream.station:GetTime() / cl_PPlay.cStream.station:GetLength()
+		if cl_PPlay.cStream.station:GetState() == 1 then
 			draw.RoundedBox( 0, 0, ypos + 25 + 14 + 15, w * time_percent, 8, Color( 255, 150, 0, 200 ) )
 		else
 			draw.RoundedBox( 0, 0, ypos + 25 + 14 + 15, w * time_percent, 8, Color( 0, 0, 0, 200 ) )
 		end
 	else
-		draw.SimpleText( formatTime(cl_PPlay.station:GetTime()), "NowPlaying_small", xpos + 6, ypos + 25 + 14 + 10 , Color( 100, 100, 100, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
+		draw.SimpleText( formatTime(cl_PPlay.cStream.station:GetTime()), "NowPlaying_small", xpos + 6, ypos + 25 + 14 + 10 , Color( 100, 100, 100, 200 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_BOTTOM )
 	end
 
 end
@@ -288,13 +343,25 @@ hook.Add( "HUDPaint", "ShowLoading", cl_PPlay.loading )
 -- STREAM NOTIFICATION
 function cl_PPlay.nowPlaying()
 
+	if !cl_PPlay.isMusicPlaying() then return end
 	if !cl_PPlay.getSetting( "nowPlaying" ) then return end
-	if cl_PPlay.station == nil or !cl_PPlay.station:IsValid() or cl_PPlay.currentStream == nil or cl_PPlay.station:GetState() == 0  then return end
 
-	drawNowPlaying( cl_PPlay.currentStream["stream_type"], cl_PPlay.station:GetState() )
+	drawNowPlaying()
 
 end
 hook.Add( "HUDPaint", "ShowNowPlaying", cl_PPlay.nowPlaying )
+
+-- QUEUE NOTIFICATION
+function cl_PPlay.queue()
+
+	if !cl_PPlay.isMusicPlaying() then return end
+	if !cl_PPlay.cStream.playlist then return end
+	if !cl_PPlay.getSetting( "queue" ) then return end
+
+	drawQueue()
+
+end
+hook.Add( "HUDPaint", "ShowQueue", cl_PPlay.queue )
 
 function cl_PPlay.showNotify( text, style, length )
 
