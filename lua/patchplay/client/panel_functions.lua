@@ -1,3 +1,19 @@
+--------------
+--  FONTS  --
+--------------
+
+surface.CreateFont( "DefaultRoboto", {
+	font = "Roboto",
+	size = 14,
+	weight = 400,
+} )
+
+surface.CreateFont( "BoldRoboto", {
+	font = "Roboto",
+	size = 14,
+	weight = 600,
+} )
+
 ----------------
 --  FRAME  --
 ----------------
@@ -17,9 +33,9 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	frm:SetBackgroundBlur( blur )
 	frm:MakePopup()
 
-	cl_PPlay.addlbl( frm, title, "frametitle", 5, 5.5 )
+	cl_PPlay.addlbl( frm, title, 5, 5.5 )
 	-- Close Button
-	cl_PPlay.addbtn( frm, "X", function() frm:Close() end, { w - 45, 0 }, { 40, 18 } )
+	cl_PPlay.addbtn( frm, "X", function() frm:Close() end, { w - 45 - 3, 0 }, { 45, 19 } )
 
 	function frm:Paint()
 		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
@@ -57,68 +73,172 @@ function cl_PPlay.addchk( plist, text, checked )
 
 end
 
+--------------
+--  SWITCH  --
+--------------
+
+function cl_PPlay.addswitch( plist, text, on, x, y )
+
+	local switch
+	local classname = plist:GetClassName()
+
+	if classname != "Panel" then
+
+		switch = vgui.Create( "DCheckBoxLabel", plist )
+
+	else
+
+		switch = vgui.Create( "DCheckBoxLabel" )
+
+	end
+
+	if classname != "Panel" then
+		switch:SetPos( x, y )
+	end
+
+	function switch:PerformLayout()
+
+		local x = self.m_iIndent or 0
+
+		self.Button:SetSize( 40, 19 )
+		self.Button:SetPos( x, 0 )
+		
+		if ( self.Label ) then
+			self.Label:SizeToContents()
+			self.Label:SetPos( x + 35 + 10, self.Button:GetTall() / 2 - 7 )
+		end
+
+	end
+
+	
+
+
+	switch:SetText( text )
+	switch:SetDark( true )
+	switch.Label:SetFont("DefaultRoboto")
+
+	switch:SizeToContents()
+	switch:SetChecked( on )
+
+	local curx = 0
+	local function smooth(goal)
+
+		local speed = math.abs(goal - curx) / 3
+
+		if curx > goal then
+
+			curx = curx - speed
+
+		elseif curx < goal then
+
+			curx = curx + speed
+
+		end
+
+		return curx
+
+	end
+
+	function switch.Button:Paint()
+
+		local switchColor = {
+
+			checked = Color( 255,116,0 ),
+			unchecked = Color( 200,200,200 ),
+			disabled = Color( 210,210,210 )
+
+		}
+
+		local knobColor = {
+
+			regular = Color( 240, 240, 240 ),
+			disabled = Color( 212, 212, 212 )
+
+		}
+
+		if switch:GetChecked() then
+
+			local curSwitchCol
+			local curKnobCol
+
+			if switch:GetDisabled() then
+
+				curSwitchCol = switchColor["disabled"]
+				curKnobCol = knobColor["disabled"]
+			else
+
+				curSwitchCol = switchColor["checked"]
+				curKnobCol = knobColor["regular"]
+			end
+
+			draw.RoundedBox( 8, 0, 0, self:GetWide(), self:GetTall(), curSwitchCol )
+			draw.RoundedBox( 6, smooth(self:GetWide() - switch:GetTall() / 1.5 - 3), switch:GetTall() / 2 - switch:GetTall() / 1.5 / 2, switch:GetTall() / 1.5, switch:GetTall() / 1.5, curKnobCol )
+			
+		else
+
+			local curSwitchCol
+			local curKnobCol
+
+			if switch:GetDisabled() then
+
+				curSwitchCol = switchColor["disabled"]
+				curKnobCol = knobColor["disabled"]
+			else
+
+				curSwitchCol = switchColor["unchecked"]
+				curKnobCol = knobColor["regular"]
+			end
+
+			draw.RoundedBox( 8, 0, 0, self:GetWide(), self:GetTall(), curSwitchCol )
+			draw.RoundedBox( 6, smooth(3), switch:GetTall() / 2 - switch:GetTall() / 1.5 / 2, switch:GetTall() / 1.5, switch:GetTall() / 1.5, curKnobCol )
+		
+		end
+
+	end
+
+	if classname == "Panel" then
+		plist:AddItem( switch )
+	end
+
+	return switch
+
+end
+
 
 
 -------------
 --  LABEL  --
 -------------
 
-function cl_PPlay.addlbl( plist, text, typ, x, y )
+function cl_PPlay.addlbl( plist, text, x, y )
 
-	if typ == "category" then
+	local lbl
+	local classname = plist:GetClassName()
 
-		local lbl = plist:Add( "DLabel" )
+	if classname != "Panel" then
 
-		lbl:SetText( text )
-		lbl:SetDark( true )
+		lbl = vgui.Create( "DLabel", plist )
 
-	elseif typ == "panel" then
+	else
 
-		local lbl = vgui.Create( "DLabel" )
-		lbl:SetText( text )
-		lbl:SetDark( true )
-		lbl:SizeToContents()
-
-		plist:AddItem( lbl )
-
-	elseif typ == "frame" then
-
-		local lbl = vgui.Create( "DLabel", plist )
-		lbl:SetPos( x, y )
-		lbl:SetText( text )
-		lbl:SizeToContents()
-		lbl:SetDark( true )
-
-		return lbl
-
-	elseif typ == "frametitle" then
-
-		surface.CreateFont( "TitleFont", {
-			font = "Roboto",
-			size = 14,
-			weight = 300,
-			blursize = 0,
-			scanlines = 0,
-			antialias = true,
-			underline = false,
-			italic = false,
-			strikeout = false,
-			symbol = false,
-			rotary = false,
-			shadow = false,
-			additive = false,
-			outline = false,
-		} )
-
-		local lbl = vgui.Create( "DLabel", plist )
-		lbl:SetPos( x, y )
-		lbl:SetFont("TitleFont")
-		lbl:SetText( text )
-		lbl:SizeToContents()
-		lbl:SetDark( true )
-
+		lbl = vgui.Create( "DLabel" )
 
 	end
+
+	if classname != "Panel" then
+		lbl:SetPos( x, y )
+	end
+
+	lbl:SetText( text )
+	lbl:SetDark( true )
+	lbl:SetFont("DefaultRoboto")
+	lbl:SizeToContents()
+
+	if classname == "Panel" then
+		plist:AddItem( lbl )
+	end
+
+	return lbl
 	
 end
 
@@ -126,47 +246,103 @@ end
 --   BUTTON   --
 ----------------
 
-function cl_PPlay.addbtn( plist, text, cmd, ... )
+function cl_PPlay.addbtn( plist, raw, cmd, ... )
 
 	local btn
+	local content = {
+		sort = "text",
+		arguments = "",
+		text = raw
+	}
+	local create = "DButton"
 	local classname = plist:GetClassName()
+
+	if string.find(raw, "IMG:") then
+
+		create = "DImageButton"
+
+		content.sort = "image"
+
+
+	elseif string.find(raw, "COL:") then
+
+		create = "DColorButton"
+
+		content.sort = "color"
+		
+
+	end
+
+	if content.sort != "text" then
+
+		local idx = string.find(raw, ";")
+		content.arguments = string.sub( raw, 5, idx - 1 )
+		content.text = string.sub( raw, idx + 1 )
+
+	end
 
 	if classname != "Panel" then
 
-		btn = vgui.Create( "DButton", plist )		
+		btn = vgui.Create( create, plist )		
 		btn:SetDark( false )
 
 	else
 
-		btn = vgui.Create( "DButton" )
+		btn = vgui.Create( create )
 		btn:SetDark( true )
 
 	end
 
 	btn.vararg = {...}
 	btn:Center()
-	btn:SetText( text )
+
+	if content.sort == "text" then
+
+		btn:SetText( content.text )
+
+	elseif content.sort == "image" then
+
+		btn:SetImage( "materials/patchplay/" .. content.arguments .. ".png" )
+
+	elseif content.sort == "color" then
+
+		local color = string.Explode(",",content.arguments )
+
+		btn:SetColor( Color( unpack(color) ) )
+		btn:SetText( content.text )
+		btn:SetContentAlignment( 5 )
+		btn:SetDrawBorder( false )
+		btn:SetToolTip( false )
+		
+	end
 
 	if classname != "Panel" then
 		btn:SetPos( btn.vararg[1][1], btn.vararg[1][2] )
-		btn:SetSize( btn.vararg[2][1], btn.vararg[2][2] )
-		table.remove( btn.vararg, 1 )
+
+		if btn.vararg[2] != nil and tonumber(btn.vararg[2][1]) != nil then
+
+			btn:SetSize( btn.vararg[2][1], btn.vararg[2][2] )
+			table.remove( btn.vararg, 1 )
+
+		else
+
+			btn:SizeToContents()
+
+		end
+
 		table.remove( btn.vararg, 1 )
 	end
 
 	local col =  Color( 200, 200, 200, 255 )
+	local tcol = Color( 0, 0, 0, 255 )
 
-	if string.find(text, "Stop") or string.find(text, "Delete") or string.find(text, "X") then
-		col =  Color( 255, 106, 106, 200 )
-		btn:SetTextColor( Color( 255,255,255,255 ) )
+	if string.find(content.text, "Stop") or string.find(content.text, "Delete") or string.find(content.text, "X") then
+		col =  Color( 199, 80, 80, 255 )
+		tcol = Color( 255,255,255,255 )
+
 	end
 
-	local oldcol = col
 
-	function btn:Paint()
-		if btn:GetDisabled() then col = Color( 230, 230, 230, 150 ) else col = oldcol end
-		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), col)
-	end
 
 	if classname == "Panel" then
 		plist:AddItem( btn )
@@ -194,6 +370,25 @@ function cl_PPlay.addbtn( plist, text, cmd, ... )
 
 		cl_PPlay.UpdateMenus()
 
+	end
+
+	if content.sort != "text" then return btn end
+
+	function btn:Paint()
+
+		local buttonColor = col
+		local textColor = tcol
+
+		if btn:GetDisabled() then
+
+			buttonColor = Color( 230, 230, 230, 150 )
+			textColor = Color( 0, 0, 0, 150 )
+
+		end
+
+		draw.RoundedBox( 0, 0, 0, btn:GetWide(), btn:GetTall(), buttonColor )
+		btn:SetTextColor( textColor )
+		
 	end
 
 	return btn
@@ -242,7 +437,7 @@ function cl_PPlay.addtext( plist, desc, typ, pos, size )
 			surface.SetFont( "Default" )
 			w, h = surface.GetTextSize( desc ) + 3
 
-			cl_PPlay.addlbl( plist, desc, "frame", pos[1], pos[2] )
+			cl_PPlay.addlbl( plist, desc, pos[1], pos[2] )
 		end
 
 		if w >= (size[1] * 0.8) then
@@ -383,6 +578,116 @@ function cl_PPlay.addgrid( plist, x, y, cols, size )
 	grid:SetRowHeight( size/2 )
 	
 	return grid
+
+end
+
+--------------
+--  BINDER  --
+--------------
+
+function cl_PPlay.addbinder( plist, value, w, h, x, y )
+
+	local binder
+	local classname = plist:GetClassName()
+
+	if classname != "Panel" then
+
+		binder = vgui.Create( "DBinder", plist )
+		binder:SetPos(x,x)		
+
+	else
+
+		binder = vgui.Create( "DBinder" )
+
+	end
+
+	binder:SetValue( value )
+	binder:SetSize( w,h)
+
+	if classname == "Panel" then
+		plist:AddItem( binder )
+	end
+
+	function binder:Paint()
+
+		local linespace = 5
+		local linelength = 5
+
+		local xparts = binder:GetWide() / (linespace + linelength)
+		local yparts = binder:GetTall() / (linespace + linelength)
+		local color = Color( 255,116,0 )
+
+		for cur_x = 1, xparts, 1 do
+
+			draw.RoundedBox( 0, binder:GetWide() / xparts * (cur_x - 1), 0, binder:GetWide() / xparts - 4, 2, color )
+			draw.RoundedBox( 0, binder:GetWide() / xparts * (cur_x - 1), binder:GetTall() - 2, binder:GetWide() / xparts - 4, 2, color )
+
+		end
+
+		for cur_y = 1, yparts, 1 do
+
+			draw.RoundedBox( 0, 0, binder:GetTall() / yparts * (cur_y - 1), 2, binder:GetTall() / yparts - 4, color )
+			draw.RoundedBox( 0, binder:GetWide() - 2, binder:GetTall() / yparts * (cur_y - 1), 2, binder:GetTall() / yparts - 4, color )
+
+		end
+
+	end
+	
+	return binder
+
+end
+
+function cl_PPlay.addbook( plist, pageNum, x, y, w, h )
+
+	local pages = {}
+	local currentPage = 1
+
+	cl_PPlay.addbtn( plist, "Next", function()
+
+		if currentPage >= pageNum then return end
+
+		currentPage = currentPage + 1
+
+		table.foreach( pages, function( key, page )
+
+			local oldX, oldY = page:GetPos()
+
+			page:SetPos( oldX - plist:GetWide(), oldY )
+
+		end )
+
+	end, { x + 100 + 5, y }, { 100, 20 }, true )
+
+	cl_PPlay.addbtn( plist, "Previous", function()
+
+		if currentPage == 1 then return end
+
+		currentPage = currentPage - 1
+
+		table.foreach( pages, function( key, page )
+
+			local oldX, oldY = page:GetPos()
+
+			page:SetPos( oldX + plist:GetWide(), oldY )
+
+		end )
+
+	end, { x, y }, { 100, 20 }, true )
+
+	for i = 1, pageNum do
+		
+		local pnl = vgui.Create( "DPanel", plist )
+		pnl:SetPos( x + plist:GetWide() * (i - 1), y + 25 ) -- Set the position of the panel
+		pnl:SetSize( 200, 200 ) -- Set the size of the panel
+
+		local txt = vgui.Create( "DLabel", pnl )
+		txt:SetPos( 10, 10 )
+		txt:SetText(i)
+
+		pages[i] = pnl
+	end 
+
+	return pages
 
 end
 

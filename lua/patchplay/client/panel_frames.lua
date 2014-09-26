@@ -24,6 +24,130 @@ local function disableIfEnabled( button, bool )
 
 end
 
+function cl_PPlay.openSettings( mode )
+
+	local server = false
+
+	if mode == "server" then server = true end
+
+	local frmW = 300
+	local frmH = 310
+	local shift = 0
+
+	local frame = cl_PPlay.addfrm( frmW, frmH, "Settings - " .. mode, true)
+
+	if cl_PPlay.getSetting( "globalSettings", true ) and !server then
+
+		local errorLabel = cl_PPlay.addlbl(frame, "These settings have no effect, because global settings are activated! If the server disables global settings, the settings below will have effect again!", 15,30)
+		errorLabel:SetWrap(true)
+		errorLabel:SetSize(frmW-30, 60)
+		errorLabel:SetColor(Color(220,0,0))
+		errorLabel:SetFont("BoldRoboto")
+		shift = 60
+		
+	end
+
+	cl_PPlay.addlbl( frame, "Button to open the " .. string.firstupper(mode) .. " Player", 15, 30 + shift)
+
+	local currentKey = tonumber( cl_PPlay.getSetting( mode .. "Key", false ) )
+
+	cl_PPlay.addbinder( frame, currentKey, frmW - 30, 30, 15, 50 + shift )
+
+	local grid = vgui.Create( "DGrid", frame )
+	grid:SetPos( 15, 100 + shift )
+	grid:SetCols( 1 )
+	grid:SetColWide( frmW - 30 )
+
+	local clientSettings = {
+
+	}
+	local serverSettings = {
+
+		globalSettings = "Make Settings global (Everybody has the same settings)"
+
+	}
+	local sharedSettings = {
+		bigNotification = "Show big notification",
+		queue = "Show Play Queue",
+		nowPlaying = "Show Now Playing"
+	}
+
+	local function addVGUI(tbl, disabled)
+
+		table.foreach(tbl, function(setting, description)
+
+			local switch = cl_PPlay.addswitch( grid, description, cl_PPlay.getSetting( setting, server ) )
+
+			if disabled then switch:SetDisabled(true) end
+
+			function switch:OnChange()
+
+				cl_PPlay.saveSetting( setting, tobool(switch:GetChecked()), server )
+
+			end
+
+		end)
+
+	end
+
+	if server then addVGUI(serverSettings) else addVGUI(clientSettings) end
+
+	addVGUI(sharedSettings)
+
+end
+
+function cl_PPlay.openPlayer( mode )
+
+	local frame = cl_PPlay.addfrm( 500, 350, "PatchPlay", true)
+	cl_PPlay.PlayerFrame = frame
+
+	if mode == "private" then
+
+		cl_PPlay.addswitch( frame, "Turn on", true, 15, 70)
+
+	end
+	
+
+	--cl_PPlay.addbook( frame, 3, 15, 30, 400, 300, next, back )
+
+	cl_PPlay.addbtn( frame, "IMG:settings;", cl_PPlay.openSettings, { 500-15-32, 30 }, mode )
+
+	cl_PPlay.addbtn( frame, "IMG:soundcloud;", cl_PPlay.openBrowser, { 15, 100 }, mode, "soundcloud" )
+	cl_PPlay.addbtn( frame, "IMG:dirble;", cl_PPlay.openBrowser, { 148, 100 }, mode, "station" )
+	--cl_PPlay.addbtn( frame, "IMG:mixcloud;", cl_PPlay.openBrowser, { 281, 100 }, mode, "mixcloud" )
+
+	-- cl_PPlay.addbtn( frame, "COL:255,116,0;My Stations", nil, { 15, 180 }, { 500 - 15, 25} )
+	-- cl_PPlay.addbtn( frame, "COL:255,116,0;My Tracks", nil, { 15, 210 }, { 500 - 15, 25} )
+	-- cl_PPlay.addbtn( frame, "COL:255,116,0;My Playlists", nil, { 15, 250 }, { 500 - 15, 25} )
+
+	local aniheight = 10
+	local op = -0.5
+
+	surface.CreateFont( "TitleBig", {
+		font = "Roboto",
+		size = 30,
+		weight = 300,
+	} )
+
+	function frame:PaintOver()
+
+		draw.SimpleText( string.firstupper(mode) .. " Player", "TitleBig", 15, 30, Color(0,0,0), 0, 0 )
+
+		if aniheight >= 10 then
+			op = -0.5
+		elseif aniheight <= 1 then
+			op = 0.5
+		end
+
+		aniheight = aniheight + op
+		
+		draw.RoundedBox( 0, 24, 320 - aniheight * 0.4, 5, aniheight * 0.4, Color( 0, 0, 0, 255 ) )
+		draw.RoundedBox( 0, 30, 320 - aniheight, 5, aniheight, Color( 0, 0, 0, 255 ) )
+		draw.RoundedBox( 0, 36, 320 - aniheight * 0.6, 5, aniheight * 0.6, Color( 0, 0, 0, 255 ) )
+	end
+
+end
+
 function cl_PPlay.openPlaylist( server )
 
 	local strings = {}
@@ -53,7 +177,7 @@ function cl_PPlay.openPlaylist( server )
 	panel.frame = cl_PPlay.addfrm( w, h, strings["frametitle"], true )
 
 	-- DESCRIPTION
-	cl_PPlay.addlbl( panel.frame, "Choose a playlist:", "frame", 15, 30 )
+	cl_PPlay.addlbl( panel.frame, "Choose a playlist:", 15, 30 )
 
 	-- LISTS
 	panel.lists.playlists = cl_PPlay.addlv( panel.frame, 15, 50, ( w - 30 ) / 3, h - 100, {"Playlists"} )
@@ -220,7 +344,7 @@ function cl_PPlay.openMy( server, kind )
 	panel.frame = cl_PPlay.addfrm(w, h, strings["frametitle"], true)
 
 	-- DESCRIPTION
-	cl_PPlay.addlbl( panel.frame, "Choose a " .. data.singleKind .. ":", "frame", 15, 30 )
+	cl_PPlay.addlbl( panel.frame, "Choose a " .. data.singleKind .. ":", 15, 30 )
 
 	-- STREAM LIST
 	panel.lists.streamList = cl_PPlay.addlv( panel.frame, 15, 50, w - 30, h - 100, {"Title"} )
@@ -484,7 +608,7 @@ function cl_PPlay.openBrowser( mode, kind )
 
 		end
 
-		info.fails = cl_PPlay.addlbl( frm, "", "frame", 15, h - 90 )
+		info.fails = cl_PPlay.addlbl( frm, "", 15, h - 90 )
 
 		pbtn = cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, { w - 115, h - 35 }, { 100, 20 }, info )
 		pbtn:SetDisabled(true)
@@ -533,7 +657,7 @@ function cl_PPlay.openBrowser( mode, kind )
 
 		end
 
-		info.fails = cl_PPlay.addlbl( frm, "", "frame", 15, h - 90 )
+		info.fails = cl_PPlay.addlbl( frm, "", 15, h - 90 )
 
 		pbtn = cl_PPlay.addbtn( frm, "Play", cl_PPlay.searchplay, { w - 115, h - 35 }, { 100, 20 }, info )
 		pbtn:SetDisabled(true)
@@ -562,4 +686,3 @@ function cl_PPlay.openBrowser( mode, kind )
 	end
 
 end
-

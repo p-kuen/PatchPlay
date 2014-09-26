@@ -14,28 +14,28 @@ function cl_PPlay.AMenu( Panel )
 
 	-- CHECK ADMIN
 	if game.SinglePlayer() then
-		cl_PPlay.addlbl( Panel, "You are playing in SinglePlayer! This only works on Multiplayer-Servers.", "panel" )
+		cl_PPlay.addlbl( Panel, "You are playing in SinglePlayer! This only works on Multiplayer-Servers." )
 		return
 	elseif !LocalPlayer():IsSuperAdmin() then
-		cl_PPlay.addlbl( Panel, "You are not an admin!", "panel" )
+		cl_PPlay.addlbl( Panel, "You are not an admin!" )
 		return
 	end
 
 	-- PANEL ELEMENTS
-	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay", "panel" )
+	cl_PPlay.addlbl( Panel, "Admin Panel for PatchPlay" )
 	cl_PPlay.addbtn( Panel, "Server Stations", cl_PPlay.openMy, true, "stations" )
 	cl_PPlay.addbtn( Panel, "Server Tracks", cl_PPlay.openMy, true, "tracks" )
 	cl_PPlay.addbtn( Panel, "Server Playlists", cl_PPlay.openPlaylist, true )
-	cl_PPlay.addlbl( Panel, "", "panel" )
+	cl_PPlay.addlbl( Panel, "" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, "server", "station" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, "server", "soundcloud" )
 
 	if cl_PPlay.sStream != nil and cl_PPlay.sStream.playing then
-		cl_PPlay.addlbl( Panel, "", "panel" )
+		cl_PPlay.addlbl( Panel, "" )
 		if cl_PPlay.sStream.info.title != "" then
-			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.sStream.info.title, "panel" )
+			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.sStream.info.title )
 		else
-			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.sStream.info.streamurl, "panel" )
+			cl_PPlay.addlbl( Panel, "Currently streaming " .. cl_PPlay.sStream.info.streamurl )
 		end
 		cl_PPlay.addbtn( Panel, "Stop streaming", cl_PPlay.sendToServer, "stop", nil )
 	end
@@ -88,25 +88,25 @@ function cl_PPlay.UMenu( Panel )
 	if !cl_PPlay.use then return end
 
 	if cl_PPlay.isMusicPlaying() then
-		cl_PPlay.addlbl( Panel, "You are listening in " .. cl_PPlay.cStream.serverText .. "-mode", "panel" )
+		cl_PPlay.addlbl( Panel, "You are listening in " .. cl_PPlay.cStream.serverText .. "-mode" )
 	end
 
 	if cl_PPlay.cStream.server then
 		cl_PPlay.addlbl( Panel, "If the server is playing music you don't like, you can switch to\nprivate mode: You can decide what you hear and " ..
 			"nobody\nelse will hear this music, just you. There are special panels\nfor SoundCloud and Internet Radio Streams.\n" ..
-			"(Note, that may not every station or track is really working)", "panel" )
+			"(Note, that may not every station or track is really working)" )
 	end
 
 	cl_PPlay.addbtn( Panel, "My Stations", cl_PPlay.openMy, false, "stations" )
 	cl_PPlay.addbtn( Panel, "My Tracks", cl_PPlay.openMy, false, "tracks" )
 	cl_PPlay.addbtn( Panel, "My Playlists", cl_PPlay.openPlaylist, false )
-	cl_PPlay.addlbl( Panel, "", "panel" )
+	cl_PPlay.addlbl( Panel, "" )
 	cl_PPlay.addbtn( Panel, "Open Station Browser", cl_PPlay.openBrowser, "private", "station" )
 	cl_PPlay.addbtn( Panel, "Open SoundCloud Browser", cl_PPlay.openBrowser, "private", "soundcloud" )
 	--cl_PPlay.addbtn( Panel, "Open YouTube Browser", cl_PPlay.openHTML, { "private", "youtube" } )
 
 	if cl_PPlay.isMusicPlaying() then
-		cl_PPlay.addlbl( Panel, "", "panel" )
+		cl_PPlay.addlbl( Panel, "" )
 		cl_PPlay.addbtn( Panel, "Stop streaming", cl_PPlay.stop )
 	end
 	
@@ -116,7 +116,7 @@ function cl_PPlay.UMenu( Panel )
 	local sldr_vol
 
 	if cl_PPlay.isMusicPlaying() then
-		cl_PPlay.addlbl( Panel, "\nSet Volume:", "panel" )
+		cl_PPlay.addlbl( Panel, "\nSet Volume:" )
 		
 		sldr_vol = cl_PPlay.addsldr( Panel, cl_PPlay.cStream.station:GetVolume() * 100 )
 
@@ -158,6 +158,25 @@ function cl_PPlay.SMenu( Panel )
 	local function addchecks()
 
 		-- PANEL ELEMENTS
+
+		local binder = vgui.Create( "DBinder" )
+		local currentKey = tonumber( cl_PPlay.getSetting( "openKey", false ) )
+
+		binder:SetValue( currentKey )
+
+		Panel:AddItem( binder )
+
+		function binder:SetValue( iNumValue )
+
+			binder:SetSelected( iNumValue )
+
+			if currentKey != iNumValue then
+
+				cl_PPlay.saveSetting( "openKey", tonumber( iNumValue ), false )
+
+			end
+
+		end
 
 		if tobool(cl_PPlay.getSetting( "allowClients", true )) == true then
 

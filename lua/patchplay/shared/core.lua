@@ -75,3 +75,9 @@ function sh_PPlay.playlist.clear()
 	sql.Query( "DELETE FROM pplay_playlist" )
 
 end
+
+function string.firstupper( word )
+
+	return string.upper(string.sub( word, 1, 1 )) .. string.sub(word, 2)
+
+end

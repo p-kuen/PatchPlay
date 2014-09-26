@@ -8,10 +8,16 @@ cl_PPlay.APIKeys = {
 cl_PPlay.streamList = {}
 cl_PPlay.playList = {}
 cl_PPlay.settings = {}
+cl_PPlay.General = {}
 
 cl_PPlay.serverTables = {}
 
+
+-- Initialization
+
+cl_PPlay.General.isTyping = false
 cl_PPlay.showLoading = false
+cl_PPlay.PlayerFrame = nil
 
 function cl_PPlay.getJSONInfo( rawURL, cb )
 
@@ -91,8 +97,7 @@ function cl_PPlay.sendToServer( name, info )
 
 		net.WriteTable( info )
 
-	end
-		
+	end		
 	net.SendToServer()
 
 end
@@ -111,32 +116,15 @@ function cl_PPlay.getPlayList( server )
 
 end
 
-function cl_PPlay.saveSetting( name, value, server, alsoClient )
+function cl_PPlay.saveSetting( name, value, server )
 
 	if server == nil then server = false end
-	if alsoClient == nil then alsoClient = true end
 
 	sh_PPlay.changeRow( server, "pplay_settings", "name", name, name, tostring(value) )
-	
-	if server and alsoClient then
 
-		sh_PPlay.changeRow( false, "pplay_settings", "name", name, name, tostring(value) )
+	if server then return end
 
-	end
-
-	if server then
-
-		cl_PPlay.UpdateMenus()
-
-	else
-
-		sh_PPlay.getSQLTable( "pplay_settings", function( result )
-
-			cl_PPlay.settings.client = result
-
-		end, false, LocalPlayer() )
-
-	end
+	getSettings(server)
 
 end
 
@@ -158,7 +146,7 @@ function cl_PPlay.getSetting( name, server )
 
 		table.foreach( cl_PPlay.settings.client, function(key, setting)
 
-			if setting.name == name then result = tobool( setting.value ) end
+			if setting.name == name then result = setting.value end
 
 		end )
 
@@ -168,19 +156,34 @@ function cl_PPlay.getSetting( name, server )
 
 end
 
---Load the settings
-sh_PPlay.getSQLTable( "pplay_settings", function( result )
+function getSettings(server)
 
-		cl_PPlay.settings.server = result
-		addchecks()
+	if server then
 
-	end, true, LocalPlayer() )
+		sh_PPlay.getSQLTable( "pplay_settings", function( result )
 
-	sh_PPlay.getSQLTable( "pplay_settings", function( result )
+			cl_PPlay.settings.server = result
 
-		cl_PPlay.settings.client = result
+		end, true, LocalPlayer() )
 
-	end, false, LocalPlayer() )
+	else
+
+		sh_PPlay.getSQLTable( "pplay_settings", function( result )
+
+			cl_PPlay.settings.client = result
+
+		end, false, LocalPlayer() )
+
+	end
+
+end
+
+hook.Add( "InitPostEntity", "getSettings", function()
+
+	getSettings(false)
+	getSettings(true)
+	
+end )
 
 net.Receive( "pplay_broadcast", function( len, pl )
 
@@ -209,7 +212,13 @@ net.Receive( "pplay_sendstreamlist", function( len, pl )
 
 end )
 
-net.Receive( "pplay_sendtable", function( len, pl )
+net.Receive( "pplay_sendsettings", function( len, pl )
+
+	cl_PPlay.settings.server = net.ReadTable()
+
+end )
+
+net.Receive( "pplay_sendtable", function( len )
 
 	local package = net.ReadTable()
 	if cl_PPlay.tblFunc != nil then
@@ -232,3 +241,34 @@ net.Receive( "pplay_sendtable", function( len, pl )
 	end
 
 end )
+
+hook.Add("Think", "KeyChecker", function()
+
+	if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "privateKey", false ) ) ) then
+
+		if cl_PPlay.General.isTyping then return end
+
+		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+
+    		cl_PPlay.openPlayer("private")
+
+   		end
+
+    end
+
+    if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", false ) ) ) then
+
+		if cl_PPlay.General.isTyping then return end
+
+		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() and LocalPlayer():IsAdmin() then
+
+    		cl_PPlay.openPlayer("server")
+
+   		end
+
+    end
+
+end)
+
+hook.Add("StartChat", "pplay_startChat", function() cl_PPlay.General.isTyping = true end)
+hook.Add("FinishChat", "pplay_finishChat", function() cl_PPlay.General.isTyping = false end)

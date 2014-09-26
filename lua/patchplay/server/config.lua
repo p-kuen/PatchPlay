@@ -1,4 +1,7 @@
-
+-- Add the images
+resource.AddFile( "materials/patchplay/soundcloud.png" )
+resource.AddFile( "materials/patchplay/dirble.png" )
+resource.AddFile( "materials/patchplay/settings.png" )
 
 ------------------
 --  NETWORKING  --
