@@ -1,3 +1,59 @@
+---------------------
+--  PLAYER FRAMES  --
+---------------------
+
+function cl_PPlay.PMenu( Panel )
+
+	-- DELETE CONTROLS
+	Panel:ClearControls()
+
+	-- UPDATE PANELS
+	if not cl_PPlay.PCPanel then
+		cl_PPlay.PCPanel = Panel
+	end
+
+	-- CHECK ADMIN
+	if game.SinglePlayer() then
+		cl_PPlay.addlbl( Panel, "You are playing in SinglePlayer! This only works on Multiplayer-Servers." )
+		return
+	end
+
+	-- PANEL ELEMENTS
+	cl_PPlay.addlbl( Panel, "Player Frames (just an alternative to the Key-Pressing)" )
+	cl_PPlay.addbtn( Panel, "Private Player Frame", function()
+
+		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+
+    		cl_PPlay.openPlayer("private")
+
+   		end
+
+	end )
+
+	
+	
+	if LocalPlayer():IsSuperAdmin() then
+		cl_PPlay.addbtn( Panel, "Server Player Frame", function()
+
+		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+
+	    		cl_PPlay.openPlayer("server")
+
+	   		end
+			
+		end )
+
+		
+	end
+
+	cl_PPlay.addlbl( Panel, "Current key(s) for opening the player frames:" )
+	cl_PPlay.addlbl( Panel, "Private Frame: " .. input.GetKeyName( cl_PPlay.getSetting("privateKey", true) ) )
+	cl_PPlay.addlbl( Panel, "Server Frame: " .. input.GetKeyName( cl_PPlay.getSetting("serverKey", true) ) )
+
+end
+
+
+
 ------------------
 --  ADMIN MENU  --
 ------------------
@@ -280,14 +336,16 @@ end
 
 local function CreateMenus()
 
+	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_PlayerFrames", "Player Frames", "", "", cl_PPlay.PMenu)
+
 	-- ADMIN MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Admin", "Server Player", "", "", cl_PPlay.AMenu)
+	--spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Admin", "Server Player", "", "", cl_PPlay.AMenu)
 	
 	-- USER MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_User", "Client Player", "", "", cl_PPlay.UMenu)
+	--spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_User", "Client Player", "", "", cl_PPlay.UMenu)
 
 	-- SETTINGS MENU
-	spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Settings", "Settings", "", "", cl_PPlay.SMenu)
+	--spawnmenu.AddToolMenuOption("Utilities", "PatchPlay", "PPlay_Settings", "Settings", "", "", cl_PPlay.SMenu)
 
 end
 hook.Add( "PopulateToolMenu", "PPlayMakeMenus", CreateMenus )
@@ -299,6 +357,11 @@ hook.Add( "PopulateToolMenu", "PPlayMakeMenus", CreateMenus )
 --------------------
 
 function cl_PPlay.UpdateMenus()
+
+	-- ADMIN MENU
+	if cl_PPlay.PCPanel then
+		cl_PPlay.PMenu(cl_PPlay.PCPanel)
+	end
 
 	-- ADMIN MENU
 	if cl_PPlay.ACPanel then

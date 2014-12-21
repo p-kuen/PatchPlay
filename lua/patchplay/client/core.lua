@@ -278,12 +278,14 @@ hook.Add("Think", "KeyChecker", function()
     	if gui.IsConsoleVisible( ) then return end
 		if cl_PPlay.General.isTyping then return end
 
-		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() and LocalPlayer():IsAdmin() then
+		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
 
     		cl_PPlay.openPlayer("server")
 
    		end
 
+    elseif input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", true ) ) ) && !LocalPlayer():IsSuperAdmin() then
+    	chat.AddText("PatchPlay: You are no SuperAdmin!")
     end
 
 end)
