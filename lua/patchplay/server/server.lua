@@ -97,8 +97,6 @@ end )
 
 net.Receive( "pplay_sendtable", function( len, pl )
 
-	print("befehl beim server angelangt!")
-
 	local info = net.ReadTable()
 
 	sh_PPlay.getSQLTable( info.tblname, nil, 2, info.ply )

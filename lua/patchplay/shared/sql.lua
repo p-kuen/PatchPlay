@@ -70,7 +70,12 @@ function sh_PPlay.load.general()
 
 		if sl != nil then
 
-			if sl[4] == nil then drop = true end
+			if SERVER then
+				if sl[7] == nil then drop = true end
+			else
+				if sl[3] == nil then drop = true end
+			end
+			
 
 		else
 
@@ -95,11 +100,13 @@ function sh_PPlay.load.general()
 		if SERVER then
 
 			sh_PPlay.addSetting( "globalSettings", "true" )
-
-		else
-
 			sh_PPlay.addSetting( "privateKey", "26" )
 			sh_PPlay.addSetting( "serverKey", "25" )
+			sh_PPlay.addSetting( "advertTime", "2" )
+			
+		else
+
+			
 
 		end
 
@@ -276,7 +283,6 @@ function sh_PPlay.changeRow( onServer, name, wherecol, whereval, ... )
 
 		}
 
-		print("sending change cmd")
 		cl_PPlay.sendToServer( string.sub(name, 7) .. "_change", change )
 		return
 
@@ -344,19 +350,13 @@ function sh_PPlay.getSQLTable( name, cb, server, ply )
 
 	if server == 2 then
 
-		print("sending to client now")
-
 		local package = {}
 		package.tblname = name
 		package.result = sh_PPlay.clearSyntax( sql.Query("SELECT * FROM " .. name) )
 
 		net.Start( "pplay_sendtable" )
 
-			print("writing...")
-
 			net.WriteTable( package )
-
-			print(ply)
 			
 		net.Send( ply )
 
@@ -372,8 +372,6 @@ function sh_PPlay.getSQLTable( name, cb, server, ply )
 		local info = {}
 		info.ply = ply
 		info.tblname = name
-
-		print(ply)
 
 		cl_PPlay.sendToServer( "sendtable", info )
 

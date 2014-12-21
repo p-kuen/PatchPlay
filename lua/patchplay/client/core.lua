@@ -138,7 +138,7 @@ function cl_PPlay.getSetting( name, server )
 
 		table.foreach( cl_PPlay.settings.server, function(key, setting)
 
-			if setting.name == name then result = tobool( setting.value ) end
+			if setting.name == name then result = setting.value end
 
 		end )
 
@@ -182,7 +182,23 @@ hook.Add( "InitPostEntity", "getSettings", function()
 
 	getSettings(false)
 	getSettings(true)
+
+	local ply = LocalPlayer()
+
+	--Advert message
+	local privateAdvert = {team.GetColor( ply:Team() ), ply:Nick(), Color(255, 255, 255), ", ", Color( 255, 150, 0, 255 ), "PatchPlay", Color(255, 255, 255), " is installed on this server! Open it by pressing the ", Color( 255, 150, 0 ), input.GetKeyName( cl_PPlay.getSetting("privateKey", true) ), Color(255,255,255), " button!"}
+	local serverAdvert = { Color(255, 255, 255), "As you are a Superadmin on this server, you can open the server player by pressing the ", Color( 255, 150, 0 ), input.GetKeyName( cl_PPlay.getSetting("serverKey", true) ), Color(255,255,255), " button!"}
+
+	chat.AddText( unpack(privateAdvert) )
+	timer.Create( "privateAdvertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, function() chat.AddText( unpack(privateAdvert) ) end )
+
+	if ply:IsSuperAdmin() then
+		chat.AddText( unpack(serverAdvert) )
+	end
+
+	timer.Create( "serverAdvertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, function() if ply:IsSuperAdmin() then chat.AddText( unpack(serverAdvert) ) end end )
 	
+
 end )
 
 net.Receive( "pplay_broadcast", function( len, pl )
@@ -244,8 +260,9 @@ end )
 
 hook.Add("Think", "KeyChecker", function()
 
-	if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "privateKey", false ) ) ) then
+	if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "privateKey", true ) ) ) then
 
+		if gui.IsConsoleVisible( ) then return end
 		if cl_PPlay.General.isTyping then return end
 
 		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
@@ -256,8 +273,9 @@ hook.Add("Think", "KeyChecker", function()
 
     end
 
-    if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", false ) ) ) then
+    if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", true ) ) ) && LocalPlayer():IsSuperAdmin() then
 
+    	if gui.IsConsoleVisible( ) then return end
 		if cl_PPlay.General.isTyping then return end
 
 		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() and LocalPlayer():IsAdmin() then
@@ -272,3 +290,5 @@ end)
 
 hook.Add("StartChat", "pplay_startChat", function() cl_PPlay.General.isTyping = true end)
 hook.Add("FinishChat", "pplay_finishChat", function() cl_PPlay.General.isTyping = false end)
+hook.Add("OnTextEntryGetFocus", "pplay_startChat", function() cl_PPlay.General.isTyping = true end)
+hook.Add("OnTextEntryLoseFocus", "pplay_startChat", function() cl_PPlay.General.isTyping = false end)

@@ -593,7 +593,7 @@ function cl_PPlay.addbinder( plist, value, w, h, x, y )
 	if classname != "Panel" then
 
 		binder = vgui.Create( "DBinder", plist )
-		binder:SetPos(x,x)		
+		binder:SetPos(x,y)		
 
 	else
 
@@ -634,83 +634,5 @@ function cl_PPlay.addbinder( plist, value, w, h, x, y )
 	end
 	
 	return binder
-
-end
-
-function cl_PPlay.addbook( plist, pageNum, x, y, w, h )
-
-	local pages = {}
-	local currentPage = 1
-
-	cl_PPlay.addbtn( plist, "Next", function()
-
-		if currentPage >= pageNum then return end
-
-		currentPage = currentPage + 1
-
-		table.foreach( pages, function( key, page )
-
-			local oldX, oldY = page:GetPos()
-
-			page:SetPos( oldX - plist:GetWide(), oldY )
-
-		end )
-
-	end, { x + 100 + 5, y }, { 100, 20 }, true )
-
-	cl_PPlay.addbtn( plist, "Previous", function()
-
-		if currentPage == 1 then return end
-
-		currentPage = currentPage - 1
-
-		table.foreach( pages, function( key, page )
-
-			local oldX, oldY = page:GetPos()
-
-			page:SetPos( oldX + plist:GetWide(), oldY )
-
-		end )
-
-	end, { x, y }, { 100, 20 }, true )
-
-	for i = 1, pageNum do
-		
-		local pnl = vgui.Create( "DPanel", plist )
-		pnl:SetPos( x + plist:GetWide() * (i - 1), y + 25 ) -- Set the position of the panel
-		pnl:SetSize( 200, 200 ) -- Set the size of the panel
-
-		local txt = vgui.Create( "DLabel", pnl )
-		txt:SetPos( 10, 10 )
-		txt:SetText(i)
-
-		pages[i] = pnl
-	end 
-
-	return pages
-
-end
-
-function cl_PPlay.addhtml( plist )
-
-	local html = vgui.Create( "HTML", plist )
-
-	local content = [[<!DOCTYPE html>
-	<html>
-	<head>
-		<link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700' rel='stylesheet' type='text/css'>
-		<script src="http://www.averi.at/jwplayer/jwplayer.js"></script>
-	</head>
-	<body>
-		<span style="font-family:'Source Sans Pro', sans-serif; font-size: "><div id="myElement">Loading the player...</div></span>
-		<iframe width="560" height="315" src="//www.youtube.com/embed/5JhXaF6GARQ?rel=0" frameborder="0" allowfullscreen></iframe>
-	</body>
-	</html>
-	]]
-
-	html:OpenURL( "http://www.youtube.com/embed/5JhXaF6GARQ?rel=0?&autoplay=1" )
-
-	
-	return html
 
 end

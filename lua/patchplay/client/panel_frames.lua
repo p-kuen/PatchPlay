@@ -36,22 +36,56 @@ function cl_PPlay.openSettings( mode )
 
 	local frame = cl_PPlay.addfrm( frmW, frmH, "Settings - " .. mode, true)
 
-	if cl_PPlay.getSetting( "globalSettings", true ) and !server then
+	if tobool( cl_PPlay.getSetting( "globalSettings", true ) ) and !server then
 
 		local errorLabel = cl_PPlay.addlbl(frame, "These settings have no effect, because global settings are activated! If the server disables global settings, the settings below will have effect again!", 15,30)
 		errorLabel:SetWrap(true)
 		errorLabel:SetSize(frmW-30, 60)
 		errorLabel:SetColor(Color(220,0,0))
 		errorLabel:SetFont("BoldRoboto")
-		shift = 60
+		shift = 0
 		
 	end
 
-	cl_PPlay.addlbl( frame, "Button to open the " .. string.firstupper(mode) .. " Player", 15, 30 + shift)
+	if server then
 
-	local currentKey = tonumber( cl_PPlay.getSetting( mode .. "Key", false ) )
+		local currentPrivateKey = tonumber( cl_PPlay.getSetting( "privateKey", true ) )
+		local currentServerKey = tonumber( cl_PPlay.getSetting( "serverKey", true ) )
 
-	cl_PPlay.addbinder( frame, currentKey, frmW - 30, 30, 15, 50 + shift )
+		cl_PPlay.addlbl( frame, "Button to open the Private Player", 15, 30 + shift)
+		local binder_private = cl_PPlay.addbinder( frame, currentPrivateKey, frmW - 30, 30, 15, 50 + shift )
+
+		shift = 60
+
+		cl_PPlay.addlbl( frame, "Button to open the Server Player", 15, 30 + shift)
+
+		local binder_server = cl_PPlay.addbinder( frame, currentServerKey, frmW - 30, 30, 15, 50 + shift )
+
+		function binder_private:SetValue( iNumValue )
+
+			binder_private:SetSelected( iNumValue )
+
+			if currentPrivateKey != iNumValue then
+
+				cl_PPlay.saveSetting( "privateKey", tonumber( iNumValue ), true )
+
+			end
+
+		end
+
+		function binder_server:SetValue( iNumValue )
+
+			binder_server:SetSelected( iNumValue )
+
+			if currentServerKey != iNumValue then
+
+				cl_PPlay.saveSetting( "serverKey", tonumber( iNumValue ), true )
+
+			end
+
+		end
+
+	end
 
 	local grid = vgui.Create( "DGrid", frame )
 	grid:SetPos( 15, 100 + shift )
@@ -63,7 +97,7 @@ function cl_PPlay.openSettings( mode )
 	}
 	local serverSettings = {
 
-		globalSettings = "Make Settings global (Everybody has the same settings)"
+		globalSettings = "Make Settings global"
 
 	}
 	local sharedSettings = {
@@ -101,24 +135,43 @@ function cl_PPlay.openPlayer( mode )
 	local frame = cl_PPlay.addfrm( 500, 350, "PatchPlay", true)
 	cl_PPlay.PlayerFrame = frame
 
+	local server = false
+
+	if mode == "server" then server = true end
+
 	if mode == "private" then
 
-		cl_PPlay.addswitch( frame, "Turn on", true, 15, 70)
-
+		--PCore.derma.switch( frame, "Turn on", function( checked ) chat.AddText("Player is " .. tostring( checked ) ) end, { 15, 70 }, true )
 	end
-	
-
-	--cl_PPlay.addbook( frame, 3, 15, 30, 400, 300, next, back )
 
 	cl_PPlay.addbtn( frame, "IMG:settings;", cl_PPlay.openSettings, { 500-15-32, 30 }, mode )
 
 	cl_PPlay.addbtn( frame, "IMG:soundcloud;", cl_PPlay.openBrowser, { 15, 100 }, mode, "soundcloud" )
 	cl_PPlay.addbtn( frame, "IMG:dirble;", cl_PPlay.openBrowser, { 148, 100 }, mode, "station" )
+
 	--cl_PPlay.addbtn( frame, "IMG:mixcloud;", cl_PPlay.openBrowser, { 281, 100 }, mode, "mixcloud" )
 
-	-- cl_PPlay.addbtn( frame, "COL:255,116,0;My Stations", nil, { 15, 180 }, { 500 - 15, 25} )
-	-- cl_PPlay.addbtn( frame, "COL:255,116,0;My Tracks", nil, { 15, 210 }, { 500 - 15, 25} )
-	-- cl_PPlay.addbtn( frame, "COL:255,116,0;My Playlists", nil, { 15, 250 }, { 500 - 15, 25} )
+	cl_PPlay.addbtn( frame, "COL:153,0,0;My Stations", cl_PPlay.openMy, { 15, 240 }, { 130, 30}, server, "stations" )
+	cl_PPlay.addbtn( frame, "COL:153,0,0;My Tracks", cl_PPlay.openMy, { 15 + 130 + 15, 240 }, { 130, 30}, server, "tracks" )
+	cl_PPlay.addbtn( frame, "COL:153,0,0;My Playlists", cl_PPlay.openMy, { 15 + 130 + 15 + 130 + 15, 240 }, { 130, 30}, server )
+
+	local btn_switch
+	local btn_stop
+
+	if !server then
+		btn_switch = cl_PPlay.addbtn( frame, "Switch", cl_PPlay.play, { 500 - 130 - 15, 350 - 15 - 25 - 5 - 25 }, {130, 25}, cl_PPlay.sStream.info, true, 1 )
+		btn_stop = cl_PPlay.addbtn( frame, "Stop player", cl_PPlay.stop, { 500 - 130 - 15, 350 - 15 - 25 }, {130, 25} )
+	else
+		btn_stop = cl_PPlay.addbtn( frame, "Stop player", cl_PPlay.sendToServer, { 500 - 130 - 15, 350 - 15 - 25 }, {130, 25}, "stop", nil )
+	end
+	
+	
+
+	local lbl_music_server = cl_PPlay.addlbl( frame, "", 50, 350 - 15 - 15 - 5 - 15 )
+	local lbl_music_private = cl_PPlay.addlbl( frame, "", 50, 350 - 15 - 15 )
+
+	lbl_music_private:SetSize(295, 25)
+	lbl_music_server:SetSize(295, 25)
 
 	local aniheight = 10
 	local op = -0.5
@@ -133,17 +186,91 @@ function cl_PPlay.openPlayer( mode )
 
 		draw.SimpleText( string.firstupper(mode) .. " Player", "TitleBig", 15, 30, Color(0,0,0), 0, 0 )
 
-		if aniheight >= 10 then
-			op = -0.5
-		elseif aniheight <= 1 then
-			op = 0.5
+		function drawAnimation( x, y, color )
+			if aniheight >= 10 then
+				op = -0.5
+			elseif aniheight <= 1 then
+				op = 0.5
+			end
+
+			aniheight = aniheight + op
+			
+			draw.RoundedBox( 0, x, y + 10 - aniheight * 0.4, 5, aniheight * 0.4, color )
+			draw.RoundedBox( 0, x + 6, y + 10 - aniheight, 5, aniheight, color )
+			draw.RoundedBox( 0, x + 12, y + 10 - aniheight * 0.6, 5, aniheight * 0.6, color )
 		end
 
-		aniheight = aniheight + op
+		function getServerTitle()
+
+			if cl_PPlay.sStream.info == nil then return "" end
+
+			if cl_PPlay.sStream.info.title != nil and cl_PPlay.sStream.info.title != "" then
+				return cl_PPlay.sStream.info.title
+			else
+				return cl_PPlay.sStream.info.streamurl
+			end
+
+		end
+
+		function getPrivateTitle()
+
+			if cl_PPlay.cStream.info == nil then return "" end
+
+			if cl_PPlay.cStream.info.title != nil and cl_PPlay.cStream.info.title != "" then
+				return cl_PPlay.cStream.info.title
+			else
+				return cl_PPlay.cStream.info.streamurl
+			end
+
+		end
+
+		if !server then
+			if cl_PPlay.isMusicPlaying( true ) and !cl_PPlay.cStream.server then
+				btn_switch:SetDisabled(false);
+			else
+				btn_switch:SetDisabled(true);
+			end
+		end
+
+		if !server and getServerTitle() != "" then
+			lbl_music_server:SetText(getServerTitle())
+		end
+
+		if !server then
+			lbl_music_private:SetText(getPrivateTitle())
+		else
+			lbl_music_private:SetText(getServerTitle())
+		end
+
+		if server and cl_PPlay.isMusicPlaying( true ) then
+
+			drawAnimation( 25, 325, Color( 0, 0, 153, 255 ) )
+			btn_stop:SetDisabled( false )
+
+		elseif server and !cl_PPlay.isMusicPlaying( true ) then
+
+			btn_stop:SetDisabled( true )
+
+		elseif !server then
+
+			if cl_PPlay.isMusicPlaying( true ) then
+
+				drawAnimation( 25, 325 - 10 - 10, Color( 0, 0, 153, 255 ) )
+
+			end
+
+			if cl_PPlay.isMusicPlaying() then
+
+				drawAnimation( 25, 325, Color( 0, 0, 0, 255 ) )
+				btn_stop:SetDisabled( false )
+			else
+				btn_stop:SetDisabled( true )
+			end
+
+		end
 		
-		draw.RoundedBox( 0, 24, 320 - aniheight * 0.4, 5, aniheight * 0.4, Color( 0, 0, 0, 255 ) )
-		draw.RoundedBox( 0, 30, 320 - aniheight, 5, aniheight, Color( 0, 0, 0, 255 ) )
-		draw.RoundedBox( 0, 36, 320 - aniheight * 0.6, 5, aniheight * 0.6, Color( 0, 0, 0, 255 ) )
+		
+		
 	end
 
 end

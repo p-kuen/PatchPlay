@@ -6,8 +6,6 @@ sv_PPlay = {}
 cl_PPlay = {}
 sh_PPlay = {}
 
-
-
 -------------------------
 --  LOAD CLIENT FILES  --
 -------------------------
@@ -37,6 +35,8 @@ include( "patchplay/shared/sql.lua")
 include( "patchplay/shared/core.lua")
 
 if SERVER then
+
+
 
 	-- INCLUDE FILES
 	include( "patchplay/server/server.lua" )
