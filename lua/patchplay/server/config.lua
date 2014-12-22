@@ -2,6 +2,9 @@
 resource.AddFile( "materials/patchplay/soundcloud.png" )
 resource.AddFile( "materials/patchplay/dirble.png" )
 resource.AddFile( "materials/patchplay/settings.png" )
+resource.AddFile( "materials/patchplay/stations.png" )
+resource.AddFile( "materials/patchplay/tracks.png" )
+resource.AddFile( "materials/patchplay/playlists.png" )
 
 ------------------
 --  NETWORKING  --

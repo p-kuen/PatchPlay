@@ -10,6 +10,8 @@ cl_PPlay.sStream = {}
 cl_PPlay.Queue = {}
 cl_PPlay.currentPlaylist = {}
 
+cl_PPlay.Volume = 100
+
 -- PLAY FUNCTION
 function cl_PPlay.play( info, server, specials )
 
@@ -52,6 +54,7 @@ function cl_PPlay.play( info, server, specials )
 				notify_text = info.streamurl
 			end
 
+			station:SetVolume( cl_PPlay.Volume / 100 )
 			cl_PPlay.cStream.info = info
 			cl_PPlay.cStream.server = server
 			cl_PPlay.cStream.station = station

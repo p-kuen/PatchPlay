@@ -132,7 +132,10 @@ end
 
 function cl_PPlay.openPlayer( mode )
 
-	local frame = cl_PPlay.addfrm( 500, 350, "PatchPlay", true)
+	local frame_w = 128 * 3 + 15 * 4
+	local frame_h = 350
+
+	local frame = cl_PPlay.addfrm( frame_w, frame_h, "PatchPlay", true)
 	cl_PPlay.PlayerFrame = frame
 
 	local server = false
@@ -144,25 +147,45 @@ function cl_PPlay.openPlayer( mode )
 		--PCore.derma.switch( frame, "Turn on", function( checked ) chat.AddText("Player is " .. tostring( checked ) ) end, { 15, 70 }, true )
 	end
 
-	cl_PPlay.addbtn( frame, "IMG:settings;", cl_PPlay.openSettings, { 500-15-32, 30 }, mode )
+	
 
 	cl_PPlay.addbtn( frame, "IMG:soundcloud;", cl_PPlay.openBrowser, { 15, 100 }, mode, "soundcloud" )
-	cl_PPlay.addbtn( frame, "IMG:dirble;", cl_PPlay.openBrowser, { 148, 100 }, mode, "station" )
+	cl_PPlay.addbtn( frame, "IMG:dirble;", cl_PPlay.openBrowser, { 15 + 128 + 15, 100 }, mode, "station" )
 
-	--cl_PPlay.addbtn( frame, "IMG:mixcloud;", cl_PPlay.openBrowser, { 281, 100 }, mode, "mixcloud" )
+	--MY STUFF
+	local pnl_mystuff = cl_PPlay.addpnl( frame, {15 + 128 + 15 + 128 + 15, 100}, {128, 128} )
 
-	cl_PPlay.addbtn( frame, "COL:153,0,0;My Stations", cl_PPlay.openMy, { 15, 240 }, { 130, 30}, server, "stations" )
-	cl_PPlay.addbtn( frame, "COL:153,0,0;My Tracks", cl_PPlay.openMy, { 15 + 130 + 15, 240 }, { 130, 30}, server, "tracks" )
-	cl_PPlay.addbtn( frame, "COL:153,0,0;My Playlists", cl_PPlay.openMy, { 15 + 130 + 15 + 130 + 15, 240 }, { 130, 30}, server )
+	cl_PPlay.addbtn( pnl_mystuff, "IMG:stations;", cl_PPlay.openMy, { 10, 32 + 11 }, { 49, 32}, server, "stations" )
+	cl_PPlay.addbtn( pnl_mystuff, "IMG:tracks;", cl_PPlay.openMy, { 10 + 49 + 10, 32 + 11 }, { 49, 32}, server, "tracks" )
+	cl_PPlay.addbtn( pnl_mystuff, "IMG:playlists;", cl_PPlay.openMy, { 10, 32 + 11 + 33 + 10 }, { 49, 32}, server )
+
+	--Settings
+	cl_PPlay.addbtn( frame, "IMG:settings;", cl_PPlay.openSettings, { frame_w - 15 - 32, 30 }, mode )
+
+
+	--cl_PPlay.addbtn( frame, "IMG:mixcloud;", cl_PPlay.openBrowser, { 414, 100 }, mode, "mixcloud" )
+
+	--Volume Slider
+
+	local sldr_volume = cl_PPlay.addsldr( frame, math.floor(cl_PPlay.Volume + 0.5), { 15, 100 + 128 + 15}, { frame_w - 30, 25 })
+
+	function sldr_volume.OnValueChanged( panel, value )
+
+		cl_PPlay.Volume = value
+
+		if cl_PPlay.isMusicPlaying() then cl_PPlay.cStream.station:SetVolume( cl_PPlay.Volume / 100 ) end
+
+	end
+	
 
 	local btn_switch
 	local btn_stop
 
 	if !server then
-		btn_switch = cl_PPlay.addbtn( frame, "Switch", cl_PPlay.play, { 500 - 130 - 15, 350 - 15 - 25 - 5 - 25 }, {130, 25}, cl_PPlay.sStream.info, true, 1 )
-		btn_stop = cl_PPlay.addbtn( frame, "Stop player", cl_PPlay.stop, { 500 - 130 - 15, 350 - 15 - 25 }, {130, 25} )
+		btn_switch = cl_PPlay.addbtn( frame, "Switch", cl_PPlay.play, { frame_w - 130 - 15, 350 - 15 - 25 - 5 - 25 }, {130, 25}, cl_PPlay.sStream.info, true, 1 )
+		btn_stop = cl_PPlay.addbtn( frame, "Stop player", cl_PPlay.stop, { frame_w - 130 - 15, 350 - 15 - 25 }, {130, 25} )
 	else
-		btn_stop = cl_PPlay.addbtn( frame, "Stop player", cl_PPlay.sendToServer, { 500 - 130 - 15, 350 - 15 - 25 }, {130, 25}, "stop", nil )
+		btn_stop = cl_PPlay.addbtn( frame, "Stop player", cl_PPlay.sendToServer, { frame_w - 130 - 15, 350 - 15 - 25 }, {130, 25}, "stop", nil )
 	end
 	
 	
@@ -185,6 +208,12 @@ function cl_PPlay.openPlayer( mode )
 	function frame:PaintOver()
 
 		draw.SimpleText( string.firstupper(mode) .. " Player", "TitleBig", 15, 30, Color(0,0,0), 0, 0 )
+
+		-- My Stuff Background
+		--draw.RoundedBox( 0, 15 + 128 + 15 + 128 + 15, 100, 128, 128, Color( 0, 0, 0, 150 ) )
+		draw.RoundedBox( 0, 15 + 128 + 15 + 128 + 15, 100, 128, 32, Color( 255, 150, 0, 255 ) )
+		draw.SimpleText( "My Stuff", "DefaultRoboto", 15 + 128 + 15 + 128 + 15 + 5, 100 + 9, Color(255, 255, 255), 0, 0 )
+		
 
 		function drawAnimation( x, y, color )
 			if aniheight >= 10 then

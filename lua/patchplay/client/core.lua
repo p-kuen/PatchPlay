@@ -185,18 +185,33 @@ hook.Add( "InitPostEntity", "getSettings", function()
 
 	local ply = LocalPlayer()
 
-	--Advert message
-	local privateAdvert = {team.GetColor( ply:Team() ), ply:Nick(), Color(255, 255, 255), ", ", Color( 255, 150, 0, 255 ), "PatchPlay", Color(255, 255, 255), " is installed on this server! Open it by pressing the ", Color( 255, 150, 0 ), input.GetKeyName( cl_PPlay.getSetting("privateKey", true) ), Color(255,255,255), " button!"}
-	local serverAdvert = { Color(255, 255, 255), "As you are a Superadmin on this server, you can open the server player by pressing the ", Color( 255, 150, 0 ), input.GetKeyName( cl_PPlay.getSetting("serverKey", true) ), Color(255,255,255), " button!"}
+	function createAdvert( ad_type )
 
-	chat.AddText( unpack(privateAdvert) )
-	timer.Create( "privateAdvertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, function() chat.AddText( unpack(privateAdvert) ) end )
+		if ad_type == "server" then
 
-	if ply:IsSuperAdmin() then
-		chat.AddText( unpack(serverAdvert) )
+			return { Color(255, 255, 255), "As you are a Superadmin on this server, you can open the server player by pressing the ", Color( 255, 150, 0 ), input.GetKeyName( cl_PPlay.getSetting("serverKey", true) ), Color(255,255,255), " button!"}
+
+		else
+
+			return {team.GetColor( ply:Team() ), ply:Nick(), Color(255, 255, 255), ", ", Color( 255, 150, 0, 255 ), "PatchPlay", Color(255, 255, 255), " is installed on this server! Open it by pressing the ", Color( 255, 150, 0 ), input.GetKeyName( cl_PPlay.getSetting("privateKey", true) ), Color(255,255,255), " button!"}
+
+		end
 	end
 
-	timer.Create( "serverAdvertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, function() if ply:IsSuperAdmin() then chat.AddText( unpack(serverAdvert) ) end end )
+	function displayMessages()
+
+		chat.AddText( unpack( createAdvert( "private" ) ) )
+		if ply:IsSuperAdmin() then
+			chat.AddText( unpack( createAdvert( "server" ) ) )
+		end
+
+	end
+
+	--Advert message
+
+	displayMessages()
+
+	timer.Create( "advertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, displayMessages )
 	
 
 end )

@@ -14,6 +14,40 @@ surface.CreateFont( "BoldRoboto", {
 	weight = 600,
 } )
 
+
+-------------
+--  PANEL  --
+-------------
+
+function cl_PPlay.addpnl( plist, pos, size )
+
+	local pnl
+	local classname = plist:GetClassName()
+
+	if classname != "Panel" then
+
+		pnl = vgui.Create( "DPanel", plist )
+		pnl:SetPos( unpack(pos) ) -- Set the position of the panel
+
+	else
+
+		pnl = vgui.Create( "DPanel" )
+
+	end
+
+	pnl:SetSize( unpack(size) ) -- Set the size of the panel
+
+	if classname == "Panel" then
+		plist:AddItem( pnl )
+	end
+
+	return pnl
+
+end
+
+
+
+
 ----------------
 --  FRAME  --
 ----------------
@@ -255,7 +289,7 @@ function cl_PPlay.addbtn( plist, raw, cmd, ... )
 		text = raw
 	}
 	local create = "DButton"
-	local classname = plist:GetClassName()
+	local isForm = plist:GetTable().Base == "DForm"
 
 	if string.find(raw, "IMG:") then
 
@@ -281,7 +315,7 @@ function cl_PPlay.addbtn( plist, raw, cmd, ... )
 
 	end
 
-	if classname != "Panel" then
+	if !isForm then
 
 		btn = vgui.Create( create, plist )		
 		btn:SetDark( false )
@@ -316,7 +350,7 @@ function cl_PPlay.addbtn( plist, raw, cmd, ... )
 		
 	end
 
-	if classname != "Panel" then
+	if !isForm then
 		btn:SetPos( btn.vararg[1][1], btn.vararg[1][2] )
 
 		if btn.vararg[2] != nil and tonumber(btn.vararg[2][1]) != nil then
@@ -344,7 +378,7 @@ function cl_PPlay.addbtn( plist, raw, cmd, ... )
 
 
 
-	if classname == "Panel" then
+	if isForm then
 		plist:AddItem( btn )
 	end
 
@@ -462,15 +496,33 @@ end
 --  SLIDER  --
 --------------
 
-function cl_PPlay.addsldr( plist, value )
+function cl_PPlay.addsldr( plist, value, pos, size )
 
-	local sldr = vgui.Create( "Slider" )
+	local sldr
+	local isForm = plist:GetTable().Base == "DForm"
+
+	if isForm then
+
+		sldr = vgui.Create( "Slider" )
+
+	else
+
+		sldr = vgui.Create( "Slider", plist )
+		sldr:SetPos( unpack(pos) )
+		sldr:SetSize( unpack(size) )
+
+	end
+
 	sldr:SetMin( 0 )
 	sldr:SetMax( 100 )
 	sldr:SetValue( value )
 	sldr:SetDecimals( 0 )
 
-	plist:AddItem( sldr )
+	if isForm then
+
+		plist:AddItem( sldr )
+
+	end
 
 	return sldr
 
