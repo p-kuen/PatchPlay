@@ -110,7 +110,7 @@ function cl_PPlay.openSettings( mode )
 
 		table.foreach(tbl, function(setting, description)
 
-			local switch = cl_PPlay.addswitch( grid, description, cl_PPlay.getSetting( setting, server ) )
+			local switch = cl_PPlay.addswitch( grid, description, cl_PPlay.getSetting( setting, server, true ) )
 
 			if disabled then switch:SetDisabled(true) end
 
@@ -126,7 +126,7 @@ function cl_PPlay.openSettings( mode )
 
 	if server then addVGUI(serverSettings) else addVGUI(clientSettings) end
 
-	addVGUI(sharedSettings)
+	addVGUI(sharedSettings--[[, !server and cl_PPlay.getSetting( "globalSettings", true)--]])
 
 end
 
@@ -157,7 +157,7 @@ function cl_PPlay.openPlayer( mode )
 
 	cl_PPlay.addbtn( pnl_mystuff, "IMG:stations;", cl_PPlay.openMy, { 10, 32 + 11 }, { 49, 32}, server, "stations" )
 	cl_PPlay.addbtn( pnl_mystuff, "IMG:tracks;", cl_PPlay.openMy, { 10 + 49 + 10, 32 + 11 }, { 49, 32}, server, "tracks" )
-	cl_PPlay.addbtn( pnl_mystuff, "IMG:playlists;", cl_PPlay.openMy, { 10, 32 + 11 + 33 + 10 }, { 49, 32}, server )
+	cl_PPlay.addbtn( pnl_mystuff, "IMG:playlists;", cl_PPlay.openMy, { 10, 32 + 11 + 33 + 10 }, { 49, 32}, server, "playlists" )
 
 	--Settings
 	cl_PPlay.addbtn( frame, "IMG:settings;", cl_PPlay.openSettings, { frame_w - 15 - 32, 30 }, mode )

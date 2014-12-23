@@ -365,7 +365,7 @@ hook.Add( "HUDPaint", "ShowQueue", cl_PPlay.queue )
 
 function cl_PPlay.showNotify( text, style, length )
 
-	if style == "play" and !cl_PPlay.getSetting( "bigNotification" ) then return end
+	if !cl_PPlay.getSetting( "bigNotification" ) then return end
 
 	local curmsg = {}
 	curmsg.text = text

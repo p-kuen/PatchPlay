@@ -128,7 +128,7 @@ function cl_PPlay.saveSetting( name, value, server )
 
 end
 
-function cl_PPlay.getSetting( name, server )
+function cl_PPlay.getSetting( name, server, noglobal )
 
 	local result = false
 
@@ -144,13 +144,19 @@ function cl_PPlay.getSetting( name, server )
 
 	else
 
-		table.foreach( cl_PPlay.settings.client, function(key, setting)
+		local search = "client"
+
+		if !noglobal and table.HasValue( table.GetKeys( sh_PPlay.sharedSettings ), name ) and cl_PPlay.getSetting( "globalSettings", true ) then search = "server" end
+
+		table.foreach( cl_PPlay.settings[search], function(key, setting)
 
 			if setting.name == name then result = setting.value end
 
 		end )
 
 	end
+
+	if result == "true" or result == "false" then result = tobool(result) end
 
 	return result
 
@@ -309,3 +315,31 @@ hook.Add("StartChat", "pplay_startChat", function() cl_PPlay.General.isTyping = 
 hook.Add("FinishChat", "pplay_finishChat", function() cl_PPlay.General.isTyping = false end)
 hook.Add("OnTextEntryGetFocus", "pplay_startChat", function() cl_PPlay.General.isTyping = true end)
 hook.Add("OnTextEntryLoseFocus", "pplay_startChat", function() cl_PPlay.General.isTyping = false end)
+
+--Console command to reset the keys
+concommand.Add( "pplay_open_private", function()
+
+	if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+
+		cl_PPlay.openPlayer("private")
+
+	end
+
+end)
+
+concommand.Add( "pplay_open_server", function( ply )
+
+	if !ply:IsSuperAdmin() then
+
+		print("You are not superadmin!")
+		return
+
+	end
+
+	if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+
+		cl_PPlay.openPlayer("server")
+
+	end
+
+end)

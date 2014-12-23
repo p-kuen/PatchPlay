@@ -85,17 +85,17 @@ function sh_PPlay.load.general()
 
 	end
 
+	sh_PPlay.sharedSettings = {
+		bigNotification = true,
+		nowPlaying = true,
+		queue = true
+	}
+
 	sh_PPlay.createTable( "pplay_settings", {"name", "value"}, function()
 
-		cl_PPlay.sharedSettings = {
-			"bigNotification",
-			"nowPlaying",
-			"queue"
-		}
-
-		sh_PPlay.addSetting( "bigNotification", "true" )
-		sh_PPlay.addSetting( "nowPlaying", "true" )
-		sh_PPlay.addSetting( "queue", "true" )
+		table.foreach( sh_PPlay.sharedSettings, function( setting, default )
+			sh_PPlay.addSetting( tostring(setting), tostring(default) )
+		end)
 
 		if SERVER then
 

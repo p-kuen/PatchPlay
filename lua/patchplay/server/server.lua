@@ -155,3 +155,20 @@ net.Receive( "pplay_playlist_remove", function( len, pl )
 end )
 
 net.Receive( "pplay_clearplaylist", sh_PPlay.playlist.clear )
+
+
+--Console command to reset the keys
+concommand.Add( "pplay_resetkeys", function()
+
+	sh_PPlay.changeRow( server, "pplay_settings", "name", "privateKey", "privateKey", "26" )
+	sh_PPlay.changeRow( server, "pplay_settings", "name", "serverKey", "serverKey", "25" )
+
+	MsgC(
+		Color(255, 150, 0),
+		"\n[PatchPlay]\n",
+		Color(255,255,255),
+		"The private key was resetted to the 'p' key!\n",
+		"The server key was resetted to the 'o' key!\n\n"
+	)
+
+end)
