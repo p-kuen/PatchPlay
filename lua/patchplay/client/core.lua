@@ -11,6 +11,7 @@ cl_PPlay.settings = {}
 cl_PPlay.General = {}
 
 cl_PPlay.serverTables = {}
+cl_PPlay.currentAdverTime = 0
 
 
 -- Initialization
@@ -214,10 +215,25 @@ hook.Add( "InitPostEntity", "getSettings", function()
 	end
 
 	--Advert message
-
 	displayMessages()
+	cl_PPlay.currentAdvertTime = cl_PPlay.getSetting( "advertTime", true) * 60
 
-	timer.Create( "advertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, displayMessages )
+	function timerFunction()
+
+		if !cl_PPlay.getSetting( "showAdverts", true ) then return end
+
+		local newTime = cl_PPlay.getSetting( "advertTime", true) * 60
+
+		if cl_PPlay.currentAdverTime != newTime then
+			timer.Adjust( "advertTimer", newTime, 0, timerFunction)
+			cl_PPlay.currentAdvertTime = newTime
+		end
+
+		displayMessages()
+
+	end
+
+	timer.Create( "advertTimer", cl_PPlay.getSetting( "advertTime", true) * 60, 0, timerFunction )
 	
 
 end )

@@ -64,6 +64,27 @@ function sh_PPlay.load.general()
 
 	local drop = false
 
+	sh_PPlay.sharedSettings = {
+		bigNotification = true,
+		nowPlaying = true,
+		queue = true
+	}
+
+	sh_PPlay.serverSettings = {
+		globalSettings = true,
+		privateKey = 26,
+		serverKey = 25,
+		showAdverts = true,
+		advertTime = 2
+	}
+
+	sh_PPlay.clientSettings = {
+
+	}
+
+	local serverSettingsCount = table.Count(sh_PPlay.sharedSettings) + table.Count(sh_PPlay.serverSettings)
+	local clientSettingsCount = table.Count(sh_PPlay.sharedSettings) + table.Count(sh_PPlay.clientSettings)
+
 	if sql.TableExists( "pplay_settings" ) then
 
 		local sl = sql.Query("SELECT * FROM pplay_settings")
@@ -71,9 +92,9 @@ function sh_PPlay.load.general()
 		if sl != nil then
 
 			if SERVER then
-				if sl[7] == nil then drop = true end
+				if sl[serverSettingsCount] == nil then drop = true end
 			else
-				if sl[3] == nil then drop = true end
+				if sl[clientSettingsCount] == nil then drop = true end
 			end
 			
 
@@ -85,12 +106,6 @@ function sh_PPlay.load.general()
 
 	end
 
-	sh_PPlay.sharedSettings = {
-		bigNotification = true,
-		nowPlaying = true,
-		queue = true
-	}
-
 	sh_PPlay.createTable( "pplay_settings", {"name", "value"}, function()
 
 		table.foreach( sh_PPlay.sharedSettings, function( setting, default )
@@ -99,10 +114,9 @@ function sh_PPlay.load.general()
 
 		if SERVER then
 
-			sh_PPlay.addSetting( "globalSettings", "true" )
-			sh_PPlay.addSetting( "privateKey", "26" )
-			sh_PPlay.addSetting( "serverKey", "25" )
-			sh_PPlay.addSetting( "advertTime", "2" )
+			table.foreach( sh_PPlay.serverSettings, function( setting, default )
+				sh_PPlay.addSetting( tostring(setting), tostring(default) )
+			end)
 			
 		else
 

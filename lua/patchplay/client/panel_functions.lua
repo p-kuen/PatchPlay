@@ -72,8 +72,8 @@ function cl_PPlay.addfrm( width, height, title, blur )
 	cl_PPlay.addbtn( frm, "X", function() frm:Close() end, { w - 45 - 3, 0 }, { 45, 19 } )
 
 	function frm:Paint()
-		draw.RoundedBox( 0, 0, 0, w, h, Color( 255, 150, 0, 255 ) )
-		draw.RoundedBox( 0, 5, 25, w - 10, h - 30, Color( 255, 255, 255 ) )
+		draw.RoundedBox( 0, 0, 0, self:GetWide(), self:GetTall(), Color( 255, 150, 0, 255 ) )
+		draw.RoundedBox( 0, 5, 25, self:GetWide() - 10, self:GetTall() - 30, Color( 255, 255, 255 ) )
 	end
 
 	return frm
@@ -686,5 +686,48 @@ function cl_PPlay.addbinder( plist, value, w, h, x, y )
 	end
 	
 	return binder
+
+end
+
+
+------------------
+--  NUMBERWANG  --
+------------------
+
+function cl_PPlay.addnwang( plist, text, value, x, y )
+
+	local nwang
+	local classname = plist:GetClassName()
+
+	if classname != "Panel" then
+
+		nwang = vgui.Create( "DNumberWangLabel", plist )
+
+	else
+
+		nwang = vgui.Create( "DNumberWangLabel" )
+
+	end
+
+	if classname != "Panel" then
+		
+		nwang:SetPos( x, y )
+
+	end
+
+	nwang:SetValue( value )
+	nwang:SetMin(1)
+	nwang:SetText( text )
+	nwang:SetDark(true)
+
+	nwang.Label:SetFont("DefaultRoboto")
+	nwang.Label:SizeToContents()
+	nwang:SizeToContents()
+
+	if classname == "Panel" then
+		plist:AddItem( nwang )
+	end
+
+	return nwang
 
 end

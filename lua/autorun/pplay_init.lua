@@ -11,6 +11,10 @@ sh_PPlay = {}
 -------------------------
 
 AddCSLuaFile()
+
+--VGUI
+AddCSLuaFile("patchplay/vgui/dnumberwanglabel.lua")
+
 AddCSLuaFile("patchplay/shared/core.lua")
 AddCSLuaFile("patchplay/client/core.lua")
 AddCSLuaFile("patchplay/client/hud.lua")
@@ -22,6 +26,7 @@ AddCSLuaFile("patchplay/shared/sql.lua")
 AddCSLuaFile("patchplay/client/sql.lua")
 AddCSLuaFile("patchplay/client/panel_frames.lua")
 AddCSLuaFile("patchplay/client/browser.lua")
+
 
 
 
@@ -46,6 +51,7 @@ if SERVER then
 
 else
 
+	include( "patchplay/vgui/dnumberwanglabel.lua" )
 	include( "patchplay/client/core.lua" )
 	include( "patchplay/client/hud.lua" )
 	include( "patchplay/client/player.lua" )

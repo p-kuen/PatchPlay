@@ -36,7 +36,7 @@ function cl_PPlay.openSettings( mode )
 
 	local frame = cl_PPlay.addfrm( frmW, frmH, "Settings - " .. mode, true)
 
-	if tobool( cl_PPlay.getSetting( "globalSettings", true ) ) and !server then
+	if cl_PPlay.getSetting( "globalSettings", true ) and !server then
 
 		local errorLabel = cl_PPlay.addlbl(frame, "These settings have no effect, because global settings are activated! If the server disables global settings, the settings below will have effect again!", 15,30)
 		errorLabel:SetWrap(true)
@@ -97,18 +97,40 @@ function cl_PPlay.openSettings( mode )
 	}
 	local serverSettings = {
 
-		globalSettings = "Make Settings global"
+		globalSettings = {
+			description = "Make settings global",
+			vgui = "switch"
+		},
+		showAdverts = {
+			description = "Show Adverts",
+			vgui = "switch"
+		},
+		advertTime = {
+			description = "Advert time",
+			vgui = "number"
+		}
 
 	}
 	local sharedSettings = {
-		bigNotification = "Show big notification",
-		queue = "Show Play Queue",
-		nowPlaying = "Show Now Playing"
+
+		bigNotification = {
+			description = "Show big notifications",
+			vgui = "switch"
+		},
+		queue = {
+			description = "Show queue window",
+			vgui = "switch"
+		},
+		nowPlaying = {
+			description = "Show now playing",
+			vgui = "switch"
+		}
+		
 	}
 
 	local function addVGUI(tbl, disabled)
 
-		table.foreach(tbl, function(setting, description)
+		local function addswitch( setting, description )
 
 			local switch = cl_PPlay.addswitch( grid, description, cl_PPlay.getSetting( setting, server, true ) )
 
@@ -120,6 +142,30 @@ function cl_PPlay.openSettings( mode )
 
 			end
 
+		end
+
+		local function addnumber( setting, description )
+
+			local nwang = cl_PPlay.addnwang( grid, description, cl_PPlay.getSetting( setting, server, true ) )
+
+			function nwang:OnValueChanged()
+
+				cl_PPlay.saveSetting( setting, nwang:GetValue(), server )
+
+			end
+
+		end
+
+		table.foreach(tbl, function(setting, config)
+
+			if config.vgui == "switch" then
+				addswitch( setting, config.description )
+			elseif config.vgui == "number" then
+				addnumber( setting, config.description )
+			else
+				print("ERROR IN ADDING SETTINGS OBJECT! UNKNOWN TYPE '" .. config.vgui .. "'")
+			end
+
 		end)
 
 	end
@@ -127,6 +173,8 @@ function cl_PPlay.openSettings( mode )
 	if server then addVGUI(serverSettings) else addVGUI(clientSettings) end
 
 	addVGUI(sharedSettings--[[, !server and cl_PPlay.getSetting( "globalSettings", true)--]])
+
+	frame:SetTall( 100 + shift + grid.m_iRowHeight * table.Count(grid:GetItems()))
 
 end
 
