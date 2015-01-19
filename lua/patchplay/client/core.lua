@@ -295,40 +295,40 @@ net.Receive( "pplay_sendtable", function( len )
 
 end )
 
-hook.Add("Think", "KeyChecker", function()
+pplay_key = false
+hook.Add( "Think", "KeyChecker", function()
+
+	if pplay_key then return end
 
 	if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "privateKey", true ) ) ) then
 
-		if gui.IsConsoleVisible( ) then return end
-		if cl_PPlay.General.isTyping then return end
+		if gui.IsConsoleVisible() or cl_PPlay.General.isTyping then return end
+
+		pplay_key = true
 
 		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+			cl_PPlay.openPlayer("private")
+		end
 
-    		cl_PPlay.openPlayer("private")
+	elseif input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", true ) ) ) then
 
-   		end
+		if gui.IsConsoleVisible() or cl_PPlay.General.isTyping then return end
 
-    end
+		pplay_key = true
 
-    if input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", true ) ) ) && LocalPlayer():IsSuperAdmin() then
-
-    	if gui.IsConsoleVisible( ) then return end
-		if cl_PPlay.General.isTyping then return end
+		if !LocalPlayer():IsSuperAdmin() then
+			chat.AddText( Color( 255, 150, 0 ), "[PatchPlay]", Color( 255, 255, 255 ), " You are no SuperAdmin!")
+			timer.Simple( 1, function() pplay_key = false end )
+			return
+		end
 
 		if cl_PPlay.PlayerFrame == nil or !cl_PPlay.PlayerFrame:IsValid() then
+			cl_PPlay.openPlayer("server")
+		end
 
-    		cl_PPlay.openPlayer("server")
+	end
 
-   		end
-
-    elseif input.IsKeyDown( tonumber( cl_PPlay.getSetting( "serverKey", true ) ) ) && !LocalPlayer():IsSuperAdmin() then
-    	if gui.IsConsoleVisible( ) then return end
-		if cl_PPlay.General.isTyping then return end
-		
-    	chat.AddText("PatchPlay: You are no SuperAdmin!")
-    end
-
-end)
+end )
 
 hook.Add("StartChat", "pplay_startChat", function() cl_PPlay.General.isTyping = true end)
 hook.Add("FinishChat", "pplay_finishChat", function() cl_PPlay.General.isTyping = false end)

@@ -183,7 +183,7 @@ function cl_PPlay.openPlayer( mode )
 	local frame_w = 128 * 3 + 15 * 4
 	local frame_h = 350
 
-	local frame = cl_PPlay.addfrm( frame_w, frame_h, "PatchPlay", true)
+	local frame = cl_PPlay.addfrm( frame_w, frame_h, "PatchPlay", true )
 	cl_PPlay.PlayerFrame = frame
 
 	local server = false
@@ -348,6 +348,10 @@ function cl_PPlay.openPlayer( mode )
 		
 		
 		
+	end
+
+	function frame:OnClose()
+		pplay_key = false
 	end
 
 end
