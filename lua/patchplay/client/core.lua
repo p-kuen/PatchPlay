@@ -137,7 +137,9 @@ function cl_PPlay.getSetting( name, server, noglobal )
 
 	if server then
 
-		table.foreach( cl_PPlay.settings.server, function(key, setting)
+		if cl_PPlay.settings.server == nil then return end
+
+		table.foreach( cl_PPlay.settings.server, function( key, setting )
 
 			if setting.name == name then result = setting.value end
 
