@@ -151,6 +151,8 @@ function cl_PPlay.getSetting( name, server, noglobal )
 
 		if !noglobal and table.HasValue( table.GetKeys( sh_PPlay.sharedSettings ), name ) and cl_PPlay.getSetting( "globalSettings", true ) then search = "server" end
 
+		if cl_PPlay.settings[search] == nil then return end
+
 		table.foreach( cl_PPlay.settings[search], function(key, setting)
 
 			if setting.name == name then result = setting.value end
