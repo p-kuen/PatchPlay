@@ -74,12 +74,11 @@ function sh_PPlay.load.general()
 		globalSettings = true,
 		privateKey = 26,
 		serverKey = 25,
-		showAdverts = true,
 		advertTime = 2
 	}
 
 	sh_PPlay.clientSettings = {
-
+		showAdverts = true
 	}
 
 	local serverSettingsCount = table.Count(sh_PPlay.sharedSettings) + table.Count(sh_PPlay.serverSettings)

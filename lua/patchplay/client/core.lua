@@ -223,8 +223,9 @@ hook.Add( "InitPostEntity", "getSettings", function()
 	cl_PPlay.currentAdvertTime = cl_PPlay.getSetting( "advertTime", true) * 60
 
 	function timerFunction()
-
-		if !cl_PPlay.getSetting( "showAdverts", true ) then return end
+		print( cl_PPlay.getSetting( "showAdverts", true ) );
+		print( cl_PPlay.getSetting("showAdverts", false ) );
+		if !cl_PPlay.getSetting("showAdverts", false ) then return end
 
 		local newTime = cl_PPlay.getSetting( "advertTime", true) * 60
 

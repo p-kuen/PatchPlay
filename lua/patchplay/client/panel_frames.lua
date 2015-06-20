@@ -101,10 +101,6 @@ function cl_PPlay.openSettings( mode )
 			description = "Make settings global",
 			vgui = "switch"
 		},
-		showAdverts = {
-			description = "Show Adverts",
-			vgui = "switch"
-		},
 		advertTime = {
 			description = "Advert time",
 			vgui = "number"
@@ -113,6 +109,10 @@ function cl_PPlay.openSettings( mode )
 	}
 	local sharedSettings = {
 
+		showAdverts = {
+			description = "Show Adverts",
+			vgui = "switch"
+		},
 		bigNotification = {
 			description = "Show big notifications",
 			vgui = "switch"

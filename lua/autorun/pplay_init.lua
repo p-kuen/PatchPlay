@@ -6,6 +6,8 @@ sv_PPlay = {}
 cl_PPlay = {}
 sh_PPlay = {}
 
+
+
 -------------------------
 --  LOAD CLIENT FILES  --
 -------------------------
@@ -33,8 +35,6 @@ AddCSLuaFile("patchplay/client/browser.lua")
 ---------------------------------------
 --  LOAD SHARED/SERVER/CLIENT FILES  --
 ---------------------------------------
-
---Add shared files
 
 include( "patchplay/shared/sql.lua")
 include( "patchplay/shared/core.lua")
