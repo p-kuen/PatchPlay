@@ -164,3 +164,8 @@ function cl_PPlay.playStream( info, server, specials )
 
 end
 
+hook.Add("PostCleanupMap", "ppFix", function()
+	if IsValid(cl_PPlay.cStream.station) then
+		cl_PPlay.cStream.station:Play()
+	end
+end)
