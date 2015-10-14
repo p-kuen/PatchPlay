@@ -166,6 +166,8 @@ end
 
 hook.Add("PostCleanupMap", "ppFix", function()
 	if IsValid(cl_PPlay.cStream.station) then
-		cl_PPlay.cStream.station:Play()
+		if cl_PPlay.cStream.station:GetLength() < 0 or cl_PPlay.cStream.station:GetLength() > cl_PPlay.cStream.station:GetTime() then
+			cl_PPlay.cStream.station:Play()
+		end
 	end
 end)
