@@ -12,7 +12,7 @@ The Super-Admins of the server can decide what everybody should hear. At the mom
 
 <h3>Simple but functional</h3>
 Also we are pleased to keep the code as simple as possible, to prevent confusions or other similar things.
-On the other hand we keep adding new functions to give you more freedom to control and more abilties to set things up like you whish to.
+On the other hand we keep adding new functions to give you more freedom to control and more abilities to set things up like you whish to.
 
 <h3>2 Frames for perfect control</h3>
 The Frames are called<b>Stream-List, Custom URL</b>.
